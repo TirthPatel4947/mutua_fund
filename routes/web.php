@@ -29,9 +29,7 @@ Route::get('/login', function () {
 
 
 Route::get('/dashboard', [DashboardController::class, 'showInvestmentAmount'])->name('dashboard');
-Route::get('/fund-details', [DashboardController::class, 'fundDetails'])->name('fund.details');
-Route::get('/fund-details', [DashboardController::class, 'fundDetails'])->name('fundDetails');
-Route::get('/fund-details', [DashboardController::class, 'fundDetails'])->name('fund.details');
+Route::get('/fund-details', [DashboardController::class, 'fundDetails'])->name('fund-details');
 
 
 // edit account

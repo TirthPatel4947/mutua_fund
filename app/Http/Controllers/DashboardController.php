@@ -77,7 +77,7 @@ class DashboardController
             $formattedPercentageGain = '0.00%';
         }
 
-        //mohit
+      
         // Step 5: Pass the data to the view, ensuring all values are numeric
         return view('dashboard', [
             'totalInvestment' => number_format($totalInvestment, 2, '.', ''),
@@ -90,7 +90,7 @@ class DashboardController
             'investmentAmount' => number_format($investmentAmount, 2, '.', '')
         ]);
     }
-    //tirth-mohit
+
     public function fundDetails()
     {
         // Step 1: Get total units and investment grouped by fundname_id
@@ -168,7 +168,5 @@ class DashboardController
         // Step 4: Pass data to the view
         return view('fund-details', compact('fundDetails'));
     }
-     public function nametest(){
-        
-     }
+  
 }
