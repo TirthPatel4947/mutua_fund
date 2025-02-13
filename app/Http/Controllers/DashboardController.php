@@ -90,7 +90,7 @@ class DashboardController
             'investmentAmount' => number_format($investmentAmount, 2, '.', '')
         ]);
     }
-    //tirth
+    //tirth, sandip
     public function fundDetails()
     {
         // Step 1: Get total units and investment grouped by fundname_id
@@ -169,6 +169,6 @@ class DashboardController
         return view('fund-details', compact('fundDetails'));
     }
      public function nametest(){
-        
+
      }
 }
