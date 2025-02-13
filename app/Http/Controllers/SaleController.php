@@ -10,6 +10,7 @@ use App\Models\ReportHistory;
 
 class SaleController
 {
+    //test
     // Fetch and display the sale form
     public function index()
     {
