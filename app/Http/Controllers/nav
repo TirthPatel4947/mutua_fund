@@ -1,0 +1,214 @@
+<?php
+namespace App\Http\Controllers;
+
+use App\Models\Mutualfund_Master; 
+use App\Models\Nav; 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log; 
+use Illuminate\Support\Carbon; 
+
+class navController 
+{
+    public function nav()
+    {
+        try {
+            $funds = Mutualfund_Master::all();
+
+            if ($funds->isEmpty()) {
+                Log::info('No funds found in the mutualfund_master table.');
+                return response()->json(['message' => 'No funds found.'], 404);
+            }
+
+            foreach ($funds as $fund) {
+                //API URL
+                $url = "https://api.mfapi.in/mf/{$fund->fundcode}/latest";
+
+               
+                // cURL session
+                $ch = curl_init();
+
+                // Set CURL options
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+                //cURL request and get the data
+                $response = curl_exec($ch);
+                
+                // Check for CURL errors
+                if (curl_errno($ch)) {
+                    Log::error('cURL Error for fund code ' . $fund->code . ': ' . curl_error($ch));
+                    continue; // Skip to the next fund
+                }
+
+                // Get HTTP response code
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+                // Close cURL session
+                curl_close($ch);
+
+                if ($httpCode !== 200) {
+                    Log::error("API request failed for fund code {$fund->code} with HTTP status {$httpCode}.");
+                    continue; // Skip to the next fund
+                }
+
+                // Decode the response to get the NAV data
+                $data = json_decode($response, true);
+                $nav_value = $data['data'][0]['nav'];
+                $nav_date = $data['data'][0]['date'];
+                $formatted_date = Carbon::createFromFormat('d-m-Y', $nav_date)->format('Y-m-d');
+                //echo $formatted_date; // Output: 2008-05-29
+                
+                if ($nav_value>0) {
+                    // Validate NAV value
+                    
+                  
+                        try {
+                            // Store the NAV data in the mutual_nav_history table
+                        
+                            Nav::create([
+                                'fundname_id' => $fund->id, 
+                                'nav'        => $nav_value, 
+                                'date'       => $formatted_date, 
+                            ]);
+
+                            //Log::info("NAV data inserted successfully for fund code {$fund->code}: {$navValue}");
+                        } catch (\Exception $e) {
+                           
+                            //Log::error("Failed to insert NAV data for fund code {$fund->code}: " . $e->getMessage());
+                        }
+                        
+                } else {
+                    //Log::error("No valid NAV data found for fund code {$fund->code}");
+                  
+                  
+                }
+            }
+
+            return response()->json(['message' => 'NAV data successfully fetched and stored.']);
+        } catch (\Exception $e) {
+            Log::error('Error fetching NAV data: ' . $e->getMessage());
+            return response()->json(['message' => 'An error occurred while fetching NAV data.'], 500);
+        }
+    }
+}  
+
+// / / / / / ////       /       //// // / / / / / /          / // / / / / /
+<?php
+namespace App\Http\Controllers;
+
+use App\Models\Mutualfund_Master;
+use App\Models\Nav;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;  // To generate UUIDs for batch numbers
+
+class NavController
+{
+    public function nav()
+    {
+        set_time_limit(600);  // Allow 10 minutes of execution time
+
+        try {
+            $batch_no = Str::uuid()->toString();  // Generate UUID for a unique batch number
+
+            // Fetch only funds with status -1
+            $funds = Mutualfund_Master::where('status', -1)->get();
+
+            if ($funds->isEmpty()) {
+                return response()->json(['message' => 'No funds found with status -1.'], 404);
+            }
+
+            // Process in chunks of 1000
+            $chunks = $funds->chunk(1000);  // Process in chunks of 1000 
+
+            foreach ($chunks as $chunk) {
+                foreach ($chunk as $fund) {
+                    // API URL for fetching NAV
+                    $url = "https://api.mfapi.in/mf/{$fund->fundcode}/latest";
+
+                    // cURL session
+                    $ch = curl_init();
+
+                    // Set cURL options
+                    curl_setopt($ch, CURLOPT_URL, $url);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+                    // Execute cURL request and get the data
+                    $response = curl_exec($ch);
+
+                    // Check for cURL errors
+                    if (curl_errno($ch)) {
+                        curl_close($ch);
+                        continue;  // Skip to the next fund
+                    }
+
+                    // Get HTTP response code
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+                    // Close cURL session
+                    curl_close($ch);
+
+                    // Skip if HTTP response is not 200 (OK)
+                    if ($httpCode !== 200) {
+                        continue;
+                    }
+
+                    // Decode the response to get the NAV data
+                    $data = json_decode($response, true);
+                    if (isset($data['data'][0])) {
+                        $nav_value = $data['data'][0]['nav'];
+                        $nav_date = $data['data'][0]['date'];
+                        $formatted_date = Carbon::createFromFormat('d-m-Y', $nav_date)->format('Y-m-d');
+
+                        if ($nav_value > 0) {
+                            try {
+                                // Store the NAV data in the mutual_nav_history table
+                                Nav::create([
+                                    'fundname_id' => $fund->id,
+                                    'nav'         => $nav_value,
+                                    'date'        => $formatted_date,
+                                    'batch_no'    => $batch_no,  // Include batch number
+                                ]);
+
+                                // Update the status of the fund to 0
+                                $fund->update(['status' => 0]);
+                            } catch (\Exception $e) {
+                                // Log the error for debugging if necessary
+                            }
+                        }
+                    }
+                }
+            }
+
+            return response()->json(['message' => 'NAV data successfully fetched and stored.']);
+        } catch (\Exception $e) {
+            // Log the error message for better debugging
+            return response()->json(['message' => 'An error occurred while fetching NAV data.'], 500);
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ///////////////////////////
+SELECT SUM(`unit`) as unit, SUM(`price`) as total_invest, 
+(SELECT mutual_nav_history.nav FROM mutual_nav_history where mutual_nav_history.fundname_id=report_history.fundname_id  ORDER BY mutual_nav_history.date DESC LIMIT 1
+) as last_nav
+FROM `report_history` 
+
+WHERE `user-id` IS NULL 
+
