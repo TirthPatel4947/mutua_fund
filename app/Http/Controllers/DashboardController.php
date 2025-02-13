@@ -77,6 +77,7 @@ class DashboardController
             $formattedPercentageGain = '0.00%';
         }
 
+        //mohit
         // Step 5: Pass the data to the view, ensuring all values are numeric
         return view('dashboard', [
             'totalInvestment' => number_format($totalInvestment, 2, '.', ''),
