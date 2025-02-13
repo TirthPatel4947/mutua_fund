@@ -168,5 +168,7 @@ class DashboardController
         // Step 4: Pass data to the view
         return view('fund-details', compact('fundDetails'));
     }
-    
+     public function nametest(){
+        
+     }
 }
