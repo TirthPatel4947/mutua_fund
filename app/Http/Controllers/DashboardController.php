@@ -90,7 +90,6 @@ class DashboardController
             'investmentAmount' => number_format($investmentAmount, 2, '.', '')
         ]);
     }
-
     public function fundDetails()
     {
         // Step 1: Get total units and investment grouped by fundname_id
