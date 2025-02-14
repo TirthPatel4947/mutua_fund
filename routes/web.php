@@ -26,10 +26,8 @@ Route::get('/login', function () {
 
 
 // deshbord page
-
-
 Route::get('/dashboard', [DashboardController::class, 'showInvestmentAmount'])->name('dashboard');
-Route::get('/fund-details', [DashboardController::class, 'fundDetails'])->name('fund-details');
+Route::get('/fund-details', [DashboardController::class, 'fundDetails'])->name('fund.details');
 
 
 // edit account
