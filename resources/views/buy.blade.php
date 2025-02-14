@@ -1,6 +1,7 @@
 @extends('common_template')
 
 @section('content')
+<title>buy</title>
 <!-- BEGIN: Content -->
 <div class="content-header row">
     <div class="content-header-left col-md-6 col-12 mb-2">

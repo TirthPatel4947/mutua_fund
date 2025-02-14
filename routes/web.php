@@ -57,6 +57,8 @@ Route::get('/import-success', function () {
 
 // buy/sale report page
 Route::get('/report', [ReportController::class, 'index'])->name('report');
+Route::get('/report/buy', [ReportController::class, 'getBuyReports'])->name('report.buy');
+Route::get('/report/sell', [ReportController::class, 'getSellReports'])->name('report.sell');
 
 
 // buy fund
