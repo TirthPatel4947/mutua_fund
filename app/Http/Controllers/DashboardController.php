@@ -1,11 +1,9 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use Yajra\DataTables\DataTables;
+use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
 use App\Models\MutualFund_Master;
-
 
 class DashboardController
 {
@@ -94,95 +92,68 @@ class DashboardController
     }
 
 
+
     public function fundDetails()
     {
-        // Step 1: Get total units and investment grouped by fundname_id
-        $investmentData = DB::table('report_history')
-            ->select(
-                'fundname_id',
-                DB::raw('SUM(unit) as total_units'),
-                DB::raw('SUM(price) as total_investment')
-            )
-            ->whereNull('user-id')
-            ->groupBy('fundname_id')
-            ->get();
-    
-        // Step 2: Get the latest NAV for each fundname_id
-        $latestNavs = DB::table('mutual_nav_history as nav')
-            ->whereIn('nav.fundname_id', $investmentData->pluck('fundname_id')->toArray())
-            ->whereRaw('nav.date = (
-                SELECT MAX(date) 
-                FROM mutual_nav_history 
-                WHERE fundname_id = nav.fundname_id
-            )')
-            ->pluck('nav.nav', 'fundname_id')
-            ->map(function ($value) {
-                return is_numeric($value) ? (float)$value : 0.0;
-            });
-    
-        // Step 3: Calculate fund-wise details
-        $fundDetails = [];
-        $totalInvestment = 0.0;
-        $currentValue = 0.0;
-        $totalUnits = 0.0;
-    
-        foreach ($investmentData as $data) {
-            $units = is_numeric($data->total_units) ? (float)$data->total_units : 0.0;
-            $investment = is_numeric($data->total_investment) ? (float)$data->total_investment : 0.0;
-    
-            $totalUnits += $units;
-            $totalInvestment += $investment;
-    
-            $lastNav = $latestNavs[$data->fundname_id] ?? 0.0;
-            $fundCurrentValue = $units * $lastNav;
-            $currentValue += $fundCurrentValue;
-            $profitOrLoss = $fundCurrentValue - $investment;
-    
-            // Calculate absolute profit/loss
-            $absoluteProfitOrLoss = abs($profitOrLoss);
-    
-            // Determine if it's a profit or a loss
-            $profitOrLossLabel = $profitOrLoss > 0 ? 'Profit' : 'Loss';
-    
-            // Percentage Calculation
-            $percentageGain = $investment > 0
-                ? (($fundCurrentValue - $investment) / $investment) * 100
-                : 0.0;
-    
-            $formattedPercentageGain = '';
-            if ($percentageGain > 0) {
-                $formattedPercentageGain = '+' . number_format($percentageGain, 2) . '%';
-            } elseif ($percentageGain < 0) {
+        if (request()->ajax()) {
+            $investmentData = DB::table('report_history')
+                ->select(
+                    'fundname_id',
+                    DB::raw('SUM(unit) as total_units'),
+                    DB::raw('SUM(price) as total_investment')
+                )
+                ->groupBy('fundname_id')
+                ->get();
+            
+            $latestNavs = DB::table('mutual_nav_history as nav')
+                ->whereIn('nav.fundname_id', $investmentData->pluck('fundname_id')->toArray())
+                ->whereRaw('nav.date = (
+                    SELECT MAX(date) 
+                    FROM mutual_nav_history 
+                    WHERE fundname_id = nav.fundname_id
+                )')
+                ->pluck('nav.nav', 'fundname_id')
+                ->map(function ($value) {
+                    return is_numeric($value) ? (float)$value : 0.0;
+                });
+            
+            $fundDetails = [];
+            foreach ($investmentData as $data) {
+                $units = (float)$data->total_units;
+                $investment = (float)$data->total_investment;
+                $lastNav = $latestNavs[$data->fundname_id] ?? 0.0;
+                $currentValue = $units * $lastNav;
+                $profitOrLoss = $currentValue - $investment;
+                $absoluteProfitOrLoss = abs($profitOrLoss);
+                $profitOrLossLabel = $profitOrLoss > 0 ? 'Profit' : 'Loss';
+                
+                $percentageGain = $investment > 0
+                    ? (($currentValue - $investment) / $investment) * 100
+                    : 0.0;
+        
                 $formattedPercentageGain = number_format($percentageGain, 2) . '%';
-            } else {
-                $formattedPercentageGain = '0.00%';
-            }
-    
-            // Get fund name from the correct column and table
-            $fundName = DB::table('mutualfund_master')->where('id', $data->fundname_id)->value('fundname');
-    
-            // Ensure fund name exists and is not null
-            if ($fundName) {
+        
+                $fundName = DB::table('mutualfund_master')
+                    ->where('id', $data->fundname_id)
+                    ->value('fundname');
+        
                 $fundDetails[] = [
                     'fund_name' => $fundName,
                     'total_units' => number_format($units, 2),
                     'total_investment' => number_format($investment, 2),
-                    'current_value' => number_format($fundCurrentValue, 2),
-                    'profit_or_loss' => number_format($absoluteProfitOrLoss, 2),
+                    'current_value' => number_format($currentValue, 2),
                     'profit_or_loss_label' => $profitOrLossLabel,
+                    'absolute_profit_or_loss' => number_format($absoluteProfitOrLoss, 2),
                     'percentage_gain' => $formattedPercentageGain,
-                    'current_nav' => number_format($lastNav, 2),
+                    'current_nav' => number_format($lastNav, 2)
                 ];
             }
+    
+            return DataTables::of($fundDetails)->make(true);
         }
     
-        return view('fund-details', [
-            'fundDetails' => $fundDetails,
-            'totalInvestment' => number_format($totalInvestment, 2, '.', ''),
-            'currentValue' => number_format($currentValue, 2, '.', ''),
-            'totalUnits' => number_format($totalUnits, 2, '.', ''),
-        ]);
+        return view('fund-details');
     }
     
-    
+
 }

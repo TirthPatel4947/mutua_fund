@@ -27,8 +27,7 @@ Route::get('/login', function () {
 
 // deshbord page
 Route::get('/dashboard', [DashboardController::class, 'showInvestmentAmount'])->name('dashboard');
-Route::get('/fund-details', [DashboardController::class, 'fundDetails'])->name('fundDetails');
-
+Route::get('/fund-details', [DashboardController::class, 'fundDetails'])->name('fund.details');
 
 
 // edit account
@@ -62,13 +61,10 @@ Route::get('/report', [ReportController::class, 'index'])->name('report');
 
 // buy fund
 
-
 Route::get('/buy', [BuyController::class, 'index'])->name('buy');
 Route::get('/buy/funds/search', [BuyController::class, 'getFunds'])->name('buy.funds.search');
 Route::get('/buy/get-nav-price', [BuyController::class, 'getNavPrice'])->name('buy.getNavPrice');
 Route::post('/buy-fund/store', [BuyController::class, 'store'])->name('buyFund.store');
-
-
 
 
 
