@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\DB;
 use App\Models\MutualFund_Master;
+
 
 class DashboardController
 {
@@ -90,6 +92,8 @@ class DashboardController
             'investmentAmount' => number_format($investmentAmount, 2, '.', '')
         ]);
     }
+
+
     public function fundDetails()
     {
         // Step 1: Get total units and investment grouped by fundname_id
@@ -118,13 +122,21 @@ class DashboardController
     
         // Step 3: Calculate fund-wise details
         $fundDetails = [];
+        $totalInvestment = 0.0;
+        $currentValue = 0.0;
+        $totalUnits = 0.0;
+    
         foreach ($investmentData as $data) {
             $units = is_numeric($data->total_units) ? (float)$data->total_units : 0.0;
             $investment = is_numeric($data->total_investment) ? (float)$data->total_investment : 0.0;
     
+            $totalUnits += $units;
+            $totalInvestment += $investment;
+    
             $lastNav = $latestNavs[$data->fundname_id] ?? 0.0;
-            $currentValue = $units * $lastNav;
-            $profitOrLoss = $currentValue - $investment;
+            $fundCurrentValue = $units * $lastNav;
+            $currentValue += $fundCurrentValue;
+            $profitOrLoss = $fundCurrentValue - $investment;
     
             // Calculate absolute profit/loss
             $absoluteProfitOrLoss = abs($profitOrLoss);
@@ -134,7 +146,7 @@ class DashboardController
     
             // Percentage Calculation
             $percentageGain = $investment > 0
-                ? (($currentValue - $investment) / $investment) * 100
+                ? (($fundCurrentValue - $investment) / $investment) * 100
                 : 0.0;
     
             $formattedPercentageGain = '';
@@ -155,17 +167,22 @@ class DashboardController
                     'fund_name' => $fundName,
                     'total_units' => number_format($units, 2),
                     'total_investment' => number_format($investment, 2),
-                    'current_value' => number_format($currentValue, 2),
+                    'current_value' => number_format($fundCurrentValue, 2),
+                    'profit_or_loss' => number_format($absoluteProfitOrLoss, 2),
                     'profit_or_loss_label' => $profitOrLossLabel,
-                    'absolute_profit_or_loss' => number_format($absoluteProfitOrLoss, 2),
                     'percentage_gain' => $formattedPercentageGain,
-                    'current_nav' => $lastNav, // Add the current NAV for unit-wise details
+                    'current_nav' => number_format($lastNav, 2),
                 ];
             }
         }
     
-        // Step 4: Pass data to the view
-        return view('fund-details', compact('fundDetails'));
+        return view('fund-details', [
+            'fundDetails' => $fundDetails,
+            'totalInvestment' => number_format($totalInvestment, 2, '.', ''),
+            'currentValue' => number_format($currentValue, 2, '.', ''),
+            'totalUnits' => number_format($totalUnits, 2, '.', ''),
+        ]);
     }
-  
+    
+    
 }
