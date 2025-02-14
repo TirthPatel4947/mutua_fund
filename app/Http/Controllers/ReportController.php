@@ -66,4 +66,15 @@ class ReportController
             })
             ->make(true);
     }
+/**
+ * Delete a report record.
+ */
+public function destroy($id)
+{
+    $report = ReportHistory::findOrFail($id); // Use ReportHistory since that's the model used
+    $report->delete();
+
+    return response()->json(['success' => 'Record deleted successfully.']);
+}
+
 }

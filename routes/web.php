@@ -59,6 +59,9 @@ Route::get('/import-success', function () {
 Route::get('/report', [ReportController::class, 'index'])->name('report');
 Route::get('/report/buy', [ReportController::class, 'getBuyReports'])->name('report.buy');
 Route::get('/report/sell', [ReportController::class, 'getSellReports'])->name('report.sell');
+Route::delete('/report/delete/{id}', [ReportController::class, 'destroy'])->name('report.delete');
+Route::get('/report/edit/{id}', [ReportController::class, 'edit'])->name('report.edit');
+Route::put('/report/update/{id}', [ReportController::class, 'update'])->name('report.update');
 
 
 // buy fund

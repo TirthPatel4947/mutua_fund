@@ -26,6 +26,7 @@
                             <th>Quantity of Shares</th>
                             <th>Price Per Unit</th>
                             <th>Total Price</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                 </table>
@@ -42,6 +43,7 @@
                             <th>Quantity of Shares</th>
                             <th>Price Per Unit</th>
                             <th>Total Price</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                 </table>
@@ -49,9 +51,10 @@
         </div>
     </div>
 </div>
+
 @endsection
+
 @section('scripts')
-<!-- Yajra DataTables Script -->
 <script>
 $(document).ready(function() {
     // Initialize Buy Report Table
@@ -64,11 +67,23 @@ $(document).ready(function() {
             { data: 'buying_date', name: 'buying_date' },
             { data: 'quantity_of_shares', name: 'quantity_of_shares' },
             { data: 'price_per_unit', name: 'price_per_unit' },
-            { data: 'total_price', name: 'total_price' }
+            { data: 'total_price', name: 'total_price' },
+            {
+                data: 'id', 
+                name: 'action', 
+                orderable: false, 
+                searchable: false,
+                render: function(data) {
+                    return `
+                        <button class="btn btn-sm btn-primary edit-btn" data-id="${data}">Edit</button>
+                        <button class="btn btn-sm btn-danger delete-btn" data-id="${data}">Delete</button>
+                    `;
+                }
+            }
         ]
     });
 
-    // Initialize Sell Report Table but do not draw it yet
+    // Initialize Sell Report Table
     var sellTable = $('#sellTable').DataTable({
         processing: true,
         serverSide: true,
@@ -78,9 +93,51 @@ $(document).ready(function() {
             { data: 'selling_date', name: 'selling_date' },
             { data: 'quantity_of_shares', name: 'quantity_of_shares' },
             { data: 'price_per_unit', name: 'price_per_unit' },
-            { data: 'total_price', name: 'total_price' }
+            { data: 'total_price', name: 'total_price' },
+            {
+                data: 'id', 
+                name: 'action', 
+                orderable: false, 
+                searchable: false,
+                render: function(data) {
+                    return `
+                        <button class="btn btn-sm btn-primary edit-btn" data-id="${data}">Edit</button>
+                        <button class="btn btn-sm btn-danger delete-btn" data-id="${data}">Delete</button>
+                    `;
+                }
+            }
         ],
-        autoWidth: false // Prevent auto-resizing issues
+        autoWidth: false
+    });
+
+    // Handle Edit Button Click
+    $('#buyTable, #sellTable').on('click', '.edit-btn', function() {
+        var id = $(this).data('id');
+        alert('Edit action for ID: ' + id);
+        // Add your edit logic here
+    });
+
+    // Handle Delete Button Click
+    $('#buyTable, #sellTable').on('click', '.delete-btn', function() {
+        var id = $(this).data('id');
+        if (confirm('Are you sure you want to delete this item?')) {
+            // Perform Delete Request
+            $.ajax({
+                url: `/report/delete/${id}`,
+                type: 'DELETE',
+                data: {
+                    "_token": "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    alert('Item deleted successfully.');
+                    buyTable.ajax.reload();
+                    sellTable.ajax.reload();
+                },
+                error: function() {
+                    alert('An error occurred while deleting.');
+                }
+            });
+        }
     });
 });
 
@@ -100,6 +157,5 @@ function showReport() {
         $('#sellTable').DataTable().columns.adjust().draw(); // Adjust and redraw Sell Table
     }
 }
-
 </script>
 @endsection
