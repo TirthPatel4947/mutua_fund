@@ -125,8 +125,12 @@ class DashboardController
                 $currentValue = $units * $lastNav;
                 $profitOrLoss = $currentValue - $investment;
                 $absoluteProfitOrLoss = abs($profitOrLoss);
-                $profitOrLossLabel = $profitOrLoss > 0 ? 'Profit' : 'Loss';
-                
+    
+                // Show + or - sign based on the value
+                $formattedProfitOrLoss = $profitOrLoss > 0 
+                    ? '+' . number_format($profitOrLoss, 2) 
+                    : number_format($profitOrLoss, 2);
+    
                 $percentageGain = $investment > 0
                     ? (($currentValue - $investment) / $investment) * 100
                     : 0.0;
@@ -142,7 +146,7 @@ class DashboardController
                     'total_units' => number_format($units, 2),
                     'total_investment' => number_format($investment, 2),
                     'current_value' => number_format($currentValue, 2),
-                    'profit_or_loss_label' => $profitOrLossLabel,
+                    'profit_or_loss' => $formattedProfitOrLoss, // Changed here
                     'absolute_profit_or_loss' => number_format($absoluteProfitOrLoss, 2),
                     'percentage_gain' => $formattedPercentageGain,
                     'current_nav' => number_format($lastNav, 2)
@@ -155,5 +159,4 @@ class DashboardController
         return view('fund-details');
     }
     
-
 }
