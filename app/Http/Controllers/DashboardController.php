@@ -105,23 +105,24 @@ class DashboardController
                 ->groupBy('fundname_id')
                 ->get();
             
+            // Get the latest NAV and its date
             $latestNavs = DB::table('mutual_nav_history as nav')
+                ->select('nav.fundname_id', 'nav.nav', 'nav.date')
                 ->whereIn('nav.fundname_id', $investmentData->pluck('fundname_id')->toArray())
                 ->whereRaw('nav.date = (
                     SELECT MAX(date) 
                     FROM mutual_nav_history 
                     WHERE fundname_id = nav.fundname_id
                 )')
-                ->pluck('nav.nav', 'fundname_id')
-                ->map(function ($value) {
-                    return is_numeric($value) ? (float)$value : 0.0;
-                });
+                ->get()
+                ->keyBy('fundname_id');
             
             $fundDetails = [];
             foreach ($investmentData as $data) {
                 $units = (float)$data->total_units;
                 $investment = (float)$data->total_investment;
-                $lastNav = $latestNavs[$data->fundname_id] ?? 0.0;
+                $lastNav = isset($latestNavs[$data->fundname_id]) ? (float)$latestNavs[$data->fundname_id]->nav : 0.0;
+                $lastNavDate = isset($latestNavs[$data->fundname_id]) ? $latestNavs[$data->fundname_id]->date : 'N/A';
                 $currentValue = $units * $lastNav;
                 $profitOrLoss = $currentValue - $investment;
                 $absoluteProfitOrLoss = abs($profitOrLoss);
@@ -146,10 +147,11 @@ class DashboardController
                     'total_units' => number_format($units, 2),
                     'total_investment' => number_format($investment, 2),
                     'current_value' => number_format($currentValue, 2),
-                    'profit_or_loss' => $formattedProfitOrLoss, // Changed here
+                    'profit_or_loss' => $formattedProfitOrLoss, 
                     'absolute_profit_or_loss' => number_format($absoluteProfitOrLoss, 2),
                     'percentage_gain' => $formattedPercentageGain,
-                    'current_nav' => number_format($lastNav, 2)
+                    'current_nav' => number_format($lastNav, 2),
+                    'nav_date' => $lastNavDate
                 ];
             }
     
@@ -158,5 +160,6 @@ class DashboardController
     
         return view('fund-details');
     }
+    
     
 }

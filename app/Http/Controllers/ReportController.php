@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ReportHistory;
+use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 
 class ReportController
@@ -16,12 +17,21 @@ class ReportController
     }
 
     /**
-     * Get Buy Reports (Yajra DataTables)
+     * Get Buy Reports (Yajra DataTables) with Date Range Filter
      */
-    public function getBuyReports()
+    public function getBuyReports(Request $request)
     {
-        $buyReports = ReportHistory::with('fund')->where('status', 1);
-
+        $buyReports = ReportHistory::with('fund')
+            ->where('status', 1);
+    
+        // Apply date range filter if provided
+        if ($request->has('date_range') && $request->date_range) {
+            $dateRange = explode(' - ', $request->date_range);
+            $startDate = \Carbon\Carbon::parse($dateRange[0])->startOfDay();
+            $endDate = \Carbon\Carbon::parse($dateRange[1])->endOfDay();
+            $buyReports->whereBetween('date', [$startDate, $endDate]);
+        }
+    
         return DataTables::of($buyReports)
             ->addColumn('fund_name', function ($report) {
                 return optional($report->fund)->fundname ?? 'N/A';
@@ -42,12 +52,21 @@ class ReportController
     }
 
     /**
-     * Get Sell Reports (Yajra DataTables)
+     * Get Sell Reports (Yajra DataTables) with Date Range Filter
      */
-    public function getSellReports()
+    public function getSellReports(Request $request)
     {
-        $sellReports = ReportHistory::with('fund')->where('status', 0);
-
+        $sellReports = ReportHistory::with('fund')
+            ->where('status', 0);
+    
+        // Apply date range filter if provided
+        if ($request->has('date_range') && $request->date_range) {
+            $dateRange = explode(' - ', $request->date_range);
+            $startDate = \Carbon\Carbon::parse($dateRange[0])->startOfDay();
+            $endDate = \Carbon\Carbon::parse($dateRange[1])->endOfDay();
+            $sellReports->whereBetween('date', [$startDate, $endDate]);
+        }
+    
         return DataTables::of($sellReports)
             ->addColumn('fund_name', function ($report) {
                 return optional($report->fund)->fundname ?? 'N/A';
@@ -66,15 +85,17 @@ class ReportController
             })
             ->make(true);
     }
-/**
- * Delete a report record.
- */
-public function destroy($id)
-{
-    $report = ReportHistory::findOrFail($id); // Use ReportHistory since that's the model used
-    $report->delete();
 
-    return response()->json(['success' => 'Record deleted successfully.']);
-}
 
+
+    /**
+     * Delete a report record.
+     */
+    public function destroy($id)
+    {
+        $report = ReportHistory::findOrFail($id);
+        $report->delete();
+
+        return response()->json(['success' => 'Record deleted successfully.']);
+    }
 }

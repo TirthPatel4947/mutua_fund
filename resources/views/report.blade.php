@@ -6,19 +6,27 @@
     <div class="card shadow-sm mb-3">
         <div class="card-body">
             <div class="row">
-                <div style="padding: 10px; background-color: #f9f9f9; border-radius: 8px;">
-                    <h5 style="font-weight: bold;">Select Action</h5>
-                    <select class="form-control" id="actionSelect" style="max-width: 150px; display: inline-block;" onchange="showReport()">
-                        <option value="buy" selected>Buy</option>
-                        <option value="sell">Sell</option>
-                    </select>
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center" style="padding: 10px; background-color: #f9f9f9; border-radius: 10px; gap: 30px;">
+                        <div class="d-flex flex-column">
+                            <label for="actionSelect" class="font-weight-bold">Select Action</label>
+                            <select class="form-control" id="actionSelect" style="max-width: 150px;" onchange="showReport()">
+                                <option value="buy" selected>Purchase</option>
+                                <option value="sell">Redemption</option>
+                            </select>
+                        </div>
+                        <div class="d-flex flex-column">
+                            <label for="dateRangeFilter" class="font-weight-bold">Select Date Range:</label>
+                            <input type="text" class="form-control" id="dateRangeFilter" placeholder="Select date range" readonly style="max-width: 200px;">
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Buy Report Table -->
             <div id="buyReport" class="report-section mt-4">
                 <h3 class="text-center text-white bg-success py-2 rounded-top font-weight-bold">Buy Report</h3>
-                <table class="table table-bordered table-striped" id="buyTable">
+                <table class="table table-bordered table-striped" id="buyTable" style="width: 100%;">
                     <thead>
                         <tr>
                             <th>Fund Name</th>
@@ -32,10 +40,10 @@
                 </table>
             </div>
 
-            <!-- Sell Report Table -->
+            <!-- Sell Report Table (Compact Version) -->
             <div id="sellReport" class="report-section mt-4 d-none">
                 <h3 class="text-center text-white bg-info py-2 rounded-top font-weight-bold">Sell Report</h3>
-                <table class="table table-bordered table-striped" id="sellTable">
+                <table class="table table-sm table-bordered table-striped" id="sellTable" style="width: 100%; font-size: 0.9em;">
                     <thead>
                         <tr>
                             <th>Fund Name</th>
@@ -51,7 +59,6 @@
         </div>
     </div>
 </div>
-
 @endsection
 
 @section('scripts')
@@ -61,7 +68,12 @@ $(document).ready(function() {
     var buyTable = $('#buyTable').DataTable({
         processing: true,
         serverSide: true,
-        ajax: '{{ route("report.buy") }}',
+        ajax: {
+            url: '{{ route("report.buy") }}',
+            data: function(d) {
+                d.date_range = $('#dateRangeFilter').val();
+            }
+        },
         columns: [
             { data: 'fund_name', name: 'fund_name' },
             { data: 'buying_date', name: 'buying_date' },
@@ -80,14 +92,22 @@ $(document).ready(function() {
                     `;
                 }
             }
-        ]
+        ],
+        language: {
+            emptyTable: "No data available for the selected date range."
+        }
     });
 
     // Initialize Sell Report Table
     var sellTable = $('#sellTable').DataTable({
         processing: true,
         serverSide: true,
-        ajax: '{{ route("report.sell") }}',
+        ajax: {
+            url: '{{ route("report.sell") }}',
+            data: function(d) {
+                d.date_range = $('#dateRangeFilter').val();
+            }
+        },
         columns: [
             { data: 'fund_name', name: 'fund_name' },
             { data: 'selling_date', name: 'selling_date' },
@@ -107,27 +127,44 @@ $(document).ready(function() {
                 }
             }
         ],
-        autoWidth: false
+        language: {
+            emptyTable: "No data available for the selected date range."
+        }
     });
 
-    // Handle Edit Button Click
+    // Initialize Date Range Picker
+    $('#dateRangeFilter').daterangepicker({
+        autoUpdateInput: false,
+        locale: {
+            cancelLabel: 'Clear'
+        }
+    });
+
+    $('#dateRangeFilter').on('apply.daterangepicker', function(ev, picker) {
+        $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+        buyTable.ajax.reload();
+        sellTable.ajax.reload();
+    });
+
+    $('#dateRangeFilter').on('cancel.daterangepicker', function(ev, picker) {
+        $(this).val('');
+        buyTable.ajax.reload();
+        sellTable.ajax.reload();
+    });
+
+    // Handle Edit and Delete Actions
     $('#buyTable, #sellTable').on('click', '.edit-btn', function() {
         var id = $(this).data('id');
         alert('Edit action for ID: ' + id);
-        // Add your edit logic here
     });
 
-    // Handle Delete Button Click
     $('#buyTable, #sellTable').on('click', '.delete-btn', function() {
         var id = $(this).data('id');
         if (confirm('Are you sure you want to delete this item?')) {
-            // Perform Delete Request
             $.ajax({
                 url: `/report/delete/${id}`,
                 type: 'DELETE',
-                data: {
-                    "_token": "{{ csrf_token() }}"
-                },
+                data: { "_token": "{{ csrf_token() }}" },
                 success: function(response) {
                     alert('Item deleted successfully.');
                     buyTable.ajax.reload();
@@ -150,11 +187,11 @@ function showReport() {
     if (action === 'buy') {
         buySection.classList.remove('d-none');
         sellSection.classList.add('d-none');
-        $('#buyTable').DataTable().columns.adjust().draw(); // Adjust and redraw Buy Table
+        $('#buyTable').DataTable().columns.adjust().draw();
     } else {
         sellSection.classList.remove('d-none');
         buySection.classList.add('d-none');
-        $('#sellTable').DataTable().columns.adjust().draw(); // Adjust and redraw Sell Table
+        $('#sellTable').DataTable().columns.adjust().draw();
     }
 }
 </script>
