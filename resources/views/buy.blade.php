@@ -36,7 +36,6 @@
                                         <option value="{{ $fund->id }}" {{ isset($buyData) && $buyData->fundname_id == $fund->id ? 'selected' : '' }}>
                                             {{ $fund->fundname }}
                                         </option>
-
                                         @endforeach
                                     </select>
                                 </div>
@@ -56,6 +55,20 @@
                                 </div>
                             </div>
                             <small class="text-danger" id="date-error"></small>
+                        </div>
+
+                        <!-- Price per Unit -->
+                        <div class="form-group">
+                            <label for="price_per_unit">Price per Unit</label>
+                            <div class="position-relative">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text"><i class="fa fa-dollar-sign"></i></div>
+                                    </div>
+                                    <input type="text" id="price_per_unit" class="form-control pl-5" placeholder="Price per unit" name="price_per_unit"  value="{{ old('price_per_unit', isset($buyData) ? $buyData->price / ($buyData->unit ?: 1) : '') }}" required>
+                                </div>
+                            </div>
+                            <small class="text-danger" id="price_per_unit-error"></small>
                         </div>
 
                         <!-- Investment Amount -->
@@ -85,6 +98,14 @@
                             </div>
                             <small class="text-danger" id="quantityofshare-error"></small>
                         </div>
+
+                        <!-- Calculation Method Option -->
+                        <div class="form-group">
+                            <label>Calculation Method</label><br>
+                            <input type="radio" name="calculation_method" value="auto" id="auto-calculation" checked> Auto Calculate
+                            <input type="radio" name="calculation_method" value="manual" id="manual-calculation"> Manual
+                        </div>
+
                     </div>
 
                     <!-- Form Actions -->
@@ -105,6 +126,7 @@
 <!-- Overlays for UI -->
 <div class="sidenav-overlay"></div>
 <div class="drag-target"></div>
+
 @endsection
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -112,6 +134,7 @@
 
 <script>
     $(document).ready(function() {
+        // Initialize select2 for fund selection
         $('#fundname').select2({
             placeholder: "Search and select a fund",
             allowClear: true,
@@ -139,13 +162,62 @@
             }
         });
 
-        $('#totalprice').on('input', function() {
-            calculateUnitsFromAmount();
+        // Event listener for when the date is selected
+        $('#date').on('change', function() {
+            autoFillPricePerUnit();
         });
 
-        $('#quantityofshare').on('input', function() {
-            calculateAmountFromUnits();
+        // Fetch NAV price and auto-fill price per unit when date is selected
+        function autoFillPricePerUnit() {
+            var date = $('#date').val();
+            var fundId = $('#fundname').val();
+
+            if (fundId && date) {
+                $.ajax({
+                    url: "{{ route('buy.getNavPrice') }}",
+                    method: "GET",
+                    data: {
+                        fund_id: fundId,
+                        date: date
+                    },
+                    success: function(response) {
+                        console.log("NAV Price:", response.nav_price);
+                        var navPrice = parseFloat(response.nav_price);
+                        if (!isNaN(navPrice)) {
+                            $('#price_per_unit').val(navPrice.toFixed(2));
+                        } else {
+                            $('#price_per_unit').val('NAV not found');
+                            alert('NAV not found for the selected date.');
+                        }
+                    }
+                });
+            }
+        }
+
+        // Switch between auto and manual calculation
+        $('input[name="calculation_method"]').on('change', function() {
+            if ($(this).val() === 'auto') {
+                enableAutoCalculation();
+            } else {
+                enableManualCalculation();
+            }
         });
+
+        // Enable auto calculation
+        function enableAutoCalculation() {
+            $('#totalprice').on('input', function() {
+                calculateUnitsFromAmount();
+            });
+            $('#quantityofshare').on('input', function() {
+                calculateAmountFromUnits();
+            });
+        }
+
+        // Enable manual calculation
+        function enableManualCalculation() {
+            $('#totalprice').off('input');
+            $('#quantityofshare').off('input');
+        }
 
         function calculateUnitsFromAmount() {
             var investmentAmount = parseFloat($('#totalprice').val());
@@ -222,7 +294,8 @@
                 fundname_id: $('#fundname').val(),
                 date: $('#date').val(),
                 totalprice: $('#totalprice').val(),
-                quantityofshare: $('#quantityofshare').val()
+                quantityofshare: $('#quantityofshare').val(),
+                price_per_unit: $('#price_per_unit').val()
             };
 
             $.ajax({
@@ -238,6 +311,7 @@
                 }
             });
         });
-    });
 
+        enableAutoCalculation(); // Default option set to auto
+    });
 </script>

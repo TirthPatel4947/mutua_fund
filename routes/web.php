@@ -70,11 +70,6 @@ Route::put('/report/sale/update/{id}', [ReportController::class, 'updateSale'])-
 
 
 
-
-
-
-
-
 // buy fund
 
 Route::get('/buy', [BuyController::class, 'index'])->name('buy');

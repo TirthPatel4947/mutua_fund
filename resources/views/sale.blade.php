@@ -1,7 +1,7 @@
 @extends('common_template')
 
 @section('content')
-<title>Sale Fund</title>
+<title>Sale</title>
 <!-- BEGIN: Content -->
 <div class="content-header row">
     <div class="content-header-left col-md-6 col-12 mb-2">
@@ -15,13 +15,12 @@
 <div class="col-md-12">
     <div class="card">
         <div class="card-header">
-            <h4 class="card-title" id="basic-layout-icons">Sell Fund</h4>
+            <h4 class="card-title" id="basic-layout-icons">Sale Fund</h4>
         </div>
         <div class="card-content collapse show">
             <div class="card-body">
-                <form class="form" id="sell-fund-form" novalidate>
+                <form class="form" id="sale-fund-form" novalidate>
                     @csrf <!-- CSRF token added here -->
-                    <input type="hidden" name="id" id="sale-id" value="{{ $saleData->id ?? '' }}"> <!-- Include sale ID for editing -->
                     <div class="form-body">
                         <!-- Fund Name -->
                         <div class="form-group">
@@ -34,9 +33,9 @@
                                     <select id="fundname" class="form-control select2" name="fundname_id" required>
                                         <option value="">Select Fund</option>
                                         @foreach($funds as $fund)
-                                            <option value="{{ $fund->id }}" {{ isset($saleData) && $saleData->fundname_id == $fund->id ? 'selected' : '' }}>
-                                                {{ $fund->fundname }}
-                                            </option>
+                                        <option value="{{ $fund->id }}" {{ isset($saleData) && $saleData->fundname_id == $fund->id ? 'selected' : '' }}>
+                                            {{ $fund->fundname }}
+                                        </option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -58,7 +57,21 @@
                             <small class="text-danger" id="date-error"></small>
                         </div>
 
-                        <!-- Sale Amount -->
+                        <!-- Price per Unit -->
+                        <div class="form-group">
+                            <label for="price_per_unit">Price per Unit</label>
+                            <div class="position-relative">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text"><i class="fa fa-dollar-sign"></i></div>
+                                    </div>
+                                    <input type="text" id="price_per_unit" class="form-control pl-5" placeholder="Price per unit" name="price_per_unit" value="{{ old('price_per_unit', isset($saleData) ? $saleData->price / ($saleData->unit ?: 1) : '') }}" required>
+                                </div>
+                            </div>
+                            <small class="text-danger" id="price_per_unit-error"></small>
+                        </div>
+
+                        <!-- Investment Amount -->
                         <div class="form-group">
                             <label for="totalprice">Sale Amount</label>
                             <div class="position-relative">
@@ -74,7 +87,7 @@
 
                         <!-- Unit to Sell -->
                         <div class="form-group">
-                            <label for="quantityofshare">Unit to Sell</label>
+                            <label for="quantityofshare">Unit to sell</label>
                             <div class="position-relative">
                                 <div class="input-group">
                                     <div class="input-group-prepend">
@@ -85,6 +98,14 @@
                             </div>
                             <small class="text-danger" id="quantityofshare-error"></small>
                         </div>
+
+                        <!-- Calculation Method Option -->
+                        <div class="form-group">
+                            <label>Calculation Method</label><br>
+                            <input type="radio" name="calculation_method" value="auto" id="auto-calculation" checked> Auto Calculate
+                            <input type="radio" name="calculation_method" value="manual" id="manual-calculation"> Manual
+                        </div>
+
                     </div>
 
                     <!-- Form Actions -->
@@ -105,6 +126,7 @@
 <!-- Overlays for UI -->
 <div class="sidenav-overlay"></div>
 <div class="drag-target"></div>
+
 @endsection
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -112,6 +134,7 @@
 
 <script>
     $(document).ready(function() {
+        // Initialize select2 for fund selection
         $('#fundname').select2({
             placeholder: "Search and select a fund",
             allowClear: true,
@@ -139,20 +162,69 @@
             }
         });
 
-        $('#totalprice').on('input', function() {
-            calculateUnitsFromAmount();
+        // Event listener for when the date is selected
+        $('#date').on('change', function() {
+            autoFillPricePerUnit();
         });
 
-        $('#quantityofshare').on('input', function() {
-            calculateAmountFromUnits();
+        // Fetch NAV price and auto-fill price per unit when date is selected
+        function autoFillPricePerUnit() {
+            var date = $('#date').val();
+            var fundId = $('#fundname').val();
+
+            if (fundId && date) {
+                $.ajax({
+                    url: "{{ route('sale.getNavPrice') }}",
+                    method: "GET",
+                    data: {
+                        fund_id: fundId,
+                        date: date
+                    },
+                    success: function(response) {
+                        console.log("NAV Price:", response.nav_price);
+                        var navPrice = parseFloat(response.nav_price);
+                        if (!isNaN(navPrice)) {
+                            $('#price_per_unit').val(navPrice.toFixed(2));
+                        } else {
+                            $('#price_per_unit').val('NAV not found');
+                            alert('NAV not found for the selected date.');
+                        }
+                    }
+                });
+            }
+        }
+
+        // Switch between auto and manual calculation
+        $('input[name="calculation_method"]').on('change', function() {
+            if ($(this).val() === 'auto') {
+                enableAutoCalculation();
+            } else {
+                enableManualCalculation();
+            }
         });
+
+        // Enable auto calculation
+        function enableAutoCalculation() {
+            $('#totalprice').on('input', function() {
+                calculateUnitsFromAmount();
+            });
+            $('#quantityofshare').on('input', function() {
+                calculateAmountFromUnits();
+            });
+        }
+
+        // Enable manual calculation
+        function enableManualCalculation() {
+            $('#totalprice').off('input');
+            $('#quantityofshare').off('input');
+        }
 
         function calculateUnitsFromAmount() {
-            var saleAmount = parseFloat($('#totalprice').val());
+            var investmentAmount = parseFloat($('#totalprice').val());
             var fundId = $('#fundname').val();
             var date = $('#date').val();
 
-            if (saleAmount && fundId && date) {
+            if (investmentAmount && fundId && date) {
                 $('#quantityofshare').prop('disabled', true).val('Loading...');
                 $.ajax({
                     url: "{{ route('sale.getNavPrice') }}",
@@ -163,7 +235,7 @@
                     },
                     success: function(response) {
                         if (response.nav_price > 0) {
-                            var units = saleAmount / response.nav_price;
+                            var units = investmentAmount / response.nav_price;
                             $('#quantityofshare').val(units.toFixed(2));
                         } else {
                             $('#quantityofshare').val('NAV not found');
@@ -197,8 +269,8 @@
                     },
                     success: function(response) {
                         if (response.nav_price > 0) {
-                            var saleAmount = units * response.nav_price;
-                            $('#totalprice').val(saleAmount.toFixed(2));
+                            var investmentAmount = units * response.nav_price;
+                            $('#totalprice').val(investmentAmount.toFixed(2));
                         } else {
                             $('#totalprice').val('NAV not found');
                             alert('NAV not found for the selected date.');
@@ -222,24 +294,24 @@
                 fundname_id: $('#fundname').val(),
                 date: $('#date').val(),
                 totalprice: $('#totalprice').val(),
-                quantityofshare: $('#quantityofshare').val()
+                quantityofshare: $('#quantityofshare').val(),
+                price_per_unit: $('#price_per_unit').val()
             };
 
-            var url = "{{ isset($saleData) ? route('report.sale.update', $saleData->id) : route('sale.store') }}";
-            var type = "{{ isset($saleData) ? 'PUT' : 'POST' }}";
-
             $.ajax({
-                url: url,
-                type: type,
+                url: "{{ isset($saleData) ? route('report.sale.update', $saleData->id) : route('sale.store') }}",
+                type: "{{ isset($saleData) ? 'PUT' : 'POST' }}",
                 data: formData,
                 success: function(response) {
                     alert(response.message);
                     window.location.href = "{{ route('dashboard') }}";
                 },
                 error: function(xhr) {
-                    alert("Failed to save the form data. Please try again.");
+                    alert("Failed to save the form data (- value). Please try again.");
                 }
             });
         });
+
+        enableAutoCalculation(); // Default option set to auto
     });
 </script>

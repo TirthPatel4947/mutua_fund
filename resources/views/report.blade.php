@@ -181,17 +181,17 @@
         });
 
         // Handle Edit and Delete Actions
-        $('#buyTable, #sellTable').on('click', '.edit-btn', function() {
+        $('#buyTable').on('click', '.edit-btn', function() {
             var id = $(this).data('id');
-            // Redirect to the edit page with the selected report ID
-            window.location.href = '/report/edit/' + id; // Adjust this path according to your routing
-        });
-        $('#buyTable, #sellTable').on('click', '.edit-btn', function() {
-            var id = $(this).data('id');
-            // Redirect to the edit page with the selected report ID
-            window.location.href = '/report/sale/edit/' + id; // Adjust this path according to your routing
+            // Redirect to the Buy edit page
+            window.location.href = '/report/edit/' + id; // Adjust the path to match the correct route for Buy
         });
 
+        $('#sellTable').on('click', '.edit-btn', function() {
+            var id = $(this).data('id');
+            // Redirect to the Sell edit page
+            window.location.href = '/report/sale/edit/' + id; // Adjust the path to match the correct route for Sale
+        });
 
         $('#buyTable, #sellTable').on('click', '.delete-btn', function() {
             var id = $(this).data('id');
@@ -232,4 +232,5 @@
         }
     }
 </script>
+
 @endsection
