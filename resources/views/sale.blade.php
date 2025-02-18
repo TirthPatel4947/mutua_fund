@@ -1,7 +1,7 @@
 @extends('common_template')
 
 @section('content')
-<title>sale</title>
+<title>Sale Fund</title>
 <!-- BEGIN: Content -->
 <div class="content-header row">
     <div class="content-header-left col-md-6 col-12 mb-2">
@@ -20,8 +20,10 @@
         <div class="card-content collapse show">
             <div class="card-body">
                 <form class="form" id="sell-fund-form" novalidate>
-                    @csrf
+                    @csrf <!-- CSRF token added here -->
+                    <input type="hidden" name="id" id="sale-id" value="{{ $saleData->id ?? '' }}"> <!-- Include sale ID for editing -->
                     <div class="form-body">
+                        <!-- Fund Name -->
                         <div class="form-group">
                             <label for="fundname">Fund Name</label>
                             <div class="position-relative">
@@ -29,12 +31,20 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="feather icon-briefcase"></i></div>
                                     </div>
-                                    <select id="fundname" class="form-control select2" name="fundname_id" required></select>
+                                    <select id="fundname" class="form-control select2" name="fundname_id" required>
+                                        <option value="">Select Fund</option>
+                                        @foreach($funds as $fund)
+                                            <option value="{{ $fund->id }}" {{ isset($saleData) && $saleData->fundname_id == $fund->id ? 'selected' : '' }}>
+                                                {{ $fund->fundname }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
                             <small class="text-danger" id="fundname-error"></small>
                         </div>
 
+                        <!-- Sale Date -->
                         <div class="form-group">
                             <label for="date">Sale Date</label>
                             <div class="position-relative">
@@ -42,12 +52,13 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="feather icon-calendar"></i></div>
                                     </div>
-                                    <input type="date" id="date" class="form-control" name="date" required>
+                                    <input type="date" id="date" class="form-control" name="date" value="{{ old('date', $saleData->date ?? '') }}" required>
                                 </div>
                             </div>
                             <small class="text-danger" id="date-error"></small>
                         </div>
 
+                        <!-- Sale Amount -->
                         <div class="form-group">
                             <label for="totalprice">Sale Amount</label>
                             <div class="position-relative">
@@ -55,12 +66,13 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="fa fa-dollar-sign"></i></div>
                                     </div>
-                                    <input type="text" id="totalprice" class="form-control pl-5" placeholder="Sale amount" name="totalprice" required>
+                                    <input type="text" id="totalprice" class="form-control pl-5" placeholder="Sale amount" name="totalprice" value="{{ old('totalprice', $saleData->price ?? '') }}" required>
                                 </div>
                             </div>
                             <small class="text-danger" id="totalprice-error"></small>
                         </div>
 
+                        <!-- Unit to Sell -->
                         <div class="form-group">
                             <label for="quantityofshare">Unit to Sell</label>
                             <div class="position-relative">
@@ -68,13 +80,14 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="fa fa-cogs"></i></div>
                                     </div>
-                                    <input type="number" id="quantityofshare" class="form-control" placeholder="Quantity of shares to sell" name="quantityofshare" required>
+                                    <input type="number" id="quantityofshare" class="form-control" placeholder="Quantity of shares to sell" name="quantityofshare" value="{{ old('quantityofshare', $saleData->unit ?? '') }}" required>
                                 </div>
                             </div>
                             <small class="text-danger" id="quantityofshare-error"></small>
                         </div>
                     </div>
 
+                    <!-- Form Actions -->
                     <div class="form-actions right">
                         <button type="reset" class="btn btn-warning mr-1">
                             <i class="feather icon-x"></i> Cancel
@@ -89,6 +102,7 @@
     </div>
 </div>
 
+<!-- Overlays for UI -->
 <div class="sidenav-overlay"></div>
 <div class="drag-target"></div>
 @endsection
@@ -211,9 +225,12 @@
                 quantityofshare: $('#quantityofshare').val()
             };
 
+            var url = "{{ isset($saleData) ? route('report.sale.update', $saleData->id) : route('sale.store') }}";
+            var type = "{{ isset($saleData) ? 'PUT' : 'POST' }}";
+
             $.ajax({
-                url: "{{ route('sale.store') }}",
-                type: "POST",
+                url: url,
+                type: type,
                 data: formData,
                 success: function(response) {
                     alert(response.message);

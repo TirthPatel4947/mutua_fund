@@ -186,7 +186,11 @@
             // Redirect to the edit page with the selected report ID
             window.location.href = '/report/edit/' + id; // Adjust this path according to your routing
         });
-
+        $('#buyTable, #sellTable').on('click', '.edit-btn', function() {
+            var id = $(this).data('id');
+            // Redirect to the edit page with the selected report ID
+            window.location.href = '/report/sale/edit/' + id; // Adjust this path according to your routing
+        });
 
 
         $('#buyTable, #sellTable').on('click', '.delete-btn', function() {

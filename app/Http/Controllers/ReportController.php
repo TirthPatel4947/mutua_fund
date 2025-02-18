@@ -154,6 +154,61 @@ class ReportController
             return response()->json(['error' => 'Failed to update the form data. Error: ' . $e->getMessage()], 500);
         }
     }
+    public function editSale($id)
+    {
+        // Fetch the data using the ID and load the related fund data
+        $saleData = ReportHistory::with('fund')->find($id);
+    
+        // Check if data exists
+        if (!$saleData) {
+            return response()->json(['error' => 'Data not found.'], 404);
+        }
+    
+        // Fetch all available funds for the dropdown
+        $funds = MutualFund_Master::all();
+    
+        // If it's an AJAX request, return JSON response
+        if (request()->ajax()) {
+            return response()->json([
+                'fund_name' => $saleData->fund->fundname ?? 'N/A',
+                'selling_date' => $saleData->date,
+                'quantity_of_shares' => $saleData->unit,
+                'price_per_unit' => $saleData->price / ($saleData->unit ?: 1),
+                'total_price' => $saleData->price,
+            ]);
+        }
+    
+        // Otherwise, return the view with data
+        return view('sale', compact('saleData', 'funds'));
+    }
+    public function updateSale(Request $request, $id)
+    {
+        $validatedData = $request->validate([
+            'fundname_id' => 'required|exists:mutualfund_master,id',
+            'date' => 'required|date',
+            'totalprice' => 'required|numeric|min:0',
+            'quantityofshare' => 'required|numeric|min:0',
+        ]);
+    
+        try {
+            $saleRecord = ReportHistory::findOrFail($id);
+    
+            // Update the sale record with negative values
+            $saleRecord->fundname_id = $validatedData['fundname_id'];
+            $saleRecord->date = $validatedData['date'];
+            $saleRecord->unit = -abs($validatedData['quantityofshare']);  // Ensure quantity is negative for sale
+            $saleRecord->price = -abs($validatedData['totalprice']);  // Ensure price is negative for sale
+    
+            // You can also calculate the total price if needed, and mark it as a sale (status = 0)
+            $saleRecord->status = 0; // Marking as a sale
+            $saleRecord->save();
+    
+            return response()->json(['message' => 'Sale successfully updated!'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to update the sale record. Error: ' . $e->getMessage()], 500);
+        }
+    }
     
 
+    
 }
