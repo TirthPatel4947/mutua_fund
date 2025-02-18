@@ -1,7 +1,7 @@
 @extends('common_template')
 
 @section('content')
-<title>buy</title>
+<title>Buy</title>
 <!-- BEGIN: Content -->
 <div class="content-header row">
     <div class="content-header-left col-md-6 col-12 mb-2">
@@ -22,6 +22,7 @@
                 <form class="form" id="buy-fund-form" novalidate>
                     @csrf <!-- CSRF token added here -->
                     <div class="form-body">
+                        <!-- Fund Name -->
                         <div class="form-group">
                             <label for="fundname">Fund Name</label>
                             <div class="position-relative">
@@ -29,13 +30,21 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="feather icon-briefcase"></i></div>
                                     </div>
-                                    <select id="fundname" class="form-control select2" name="fundname_id" required></select>
+                                    <select id="fundname" class="form-control select2" name="fundname_id" required>
+                                        <option value="">Select Fund</option>
+                                        @foreach($funds as $fund)
+                                        <option value="{{ $fund->id }}" {{ isset($buyData) && $buyData->fundname_id == $fund->id ? 'selected' : '' }}>
+                                            {{ $fund->fundname }}
+                                        </option>
 
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
                             <small class="text-danger" id="fundname-error"></small>
                         </div>
 
+                        <!-- Buy Date -->
                         <div class="form-group">
                             <label for="date">Buy Date</label>
                             <div class="position-relative">
@@ -43,12 +52,13 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="feather icon-calendar"></i></div>
                                     </div>
-                                    <input type="date" id="date" class="form-control" name="date" required>
+                                    <input type="date" id="date" class="form-control" name="date" value="{{ old('date', $buyData->date ?? '') }}" required>
                                 </div>
                             </div>
                             <small class="text-danger" id="date-error"></small>
                         </div>
 
+                        <!-- Investment Amount -->
                         <div class="form-group">
                             <label for="totalprice">Investment Amount</label>
                             <div class="position-relative">
@@ -56,12 +66,13 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="fa fa-dollar-sign"></i></div>
                                     </div>
-                                    <input type="text" id="totalprice" class="form-control pl-5" placeholder="Buy amount" name="totalprice" required>
+                                    <input type="text" id="totalprice" class="form-control pl-5" placeholder="Buy amount" name="totalprice" value="{{ old('totalprice', $buyData->price ?? '') }}" required>
                                 </div>
                             </div>
                             <small class="text-danger" id="totalprice-error"></small>
                         </div>
 
+                        <!-- Unit to Buy -->
                         <div class="form-group">
                             <label for="quantityofshare">Unit to buy</label>
                             <div class="position-relative">
@@ -69,13 +80,14 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="fa fa-cogs"></i></div>
                                     </div>
-                                    <input type="number" id="quantityofshare" class="form-control" placeholder="Quantity of shares to buy" name="quantityofshare" required>
+                                    <input type="number" id="quantityofshare" class="form-control" placeholder="Quantity of shares to buy" name="quantityofshare" value="{{ old('quantityofshare', $buyData->unit ?? '') }}" required>
                                 </div>
                             </div>
                             <small class="text-danger" id="quantityofshare-error"></small>
                         </div>
                     </div>
 
+                    <!-- Form Actions -->
                     <div class="form-actions right">
                         <button type="reset" class="btn btn-warning mr-1">
                             <i class="feather icon-x"></i> Cancel
@@ -90,6 +102,7 @@
     </div>
 </div>
 
+<!-- Overlays for UI -->
 <div class="sidenav-overlay"></div>
 <div class="drag-target"></div>
 @endsection
@@ -206,15 +219,15 @@
             e.preventDefault();
             var formData = {
                 _token: '{{ csrf_token() }}',
-                fundname_id: $('#fundname').val(), // Use fundname_id instead of fundname
+                fundname_id: $('#fundname').val(),
                 date: $('#date').val(),
                 totalprice: $('#totalprice').val(),
                 quantityofshare: $('#quantityofshare').val()
             };
 
             $.ajax({
-                url: "{{ route('buyFund.store') }}",
-                type: "POST",
+                url: "{{ isset($buyData) ? route('report.update', $buyData->id) : route('buyFund.store') }}",
+                type: "{{ isset($buyData) ? 'PUT' : 'POST' }}",
                 data: formData,
                 success: function(response) {
                     alert(response.message);
@@ -226,4 +239,5 @@
             });
         });
     });
+
 </script>

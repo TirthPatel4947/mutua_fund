@@ -30,4 +30,15 @@ class MutualFund_Master extends Model
     {
         return $this->belongsTo(\App\Models\MutualFund_Master::class, 'fundname_id');
     }
+    // In the MutualFund_Master model
+public function getNavPriceOnDate($date)
+{
+    // Assume you have a 'nav_prices' table or similar for storing NAV data
+    $navPrice = mutual_nav_history::where('fundname_id', $this->id)
+                        ->whereDate('date', $date)
+                        ->first();
+
+    return $navPrice ? $navPrice->price : null; // Return the price or null if not found
+}
+
 }

@@ -63,136 +63,169 @@
 
 @section('scripts')
 <script>
-$(document).ready(function() {
-    // Initialize Buy Report Table
-    var buyTable = $('#buyTable').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: '{{ route("report.buy") }}',
-            data: function(d) {
-                d.date_range = $('#dateRangeFilter').val();
-            }
-        },
-        columns: [
-            { data: 'fund_name', name: 'fund_name' },
-            { data: 'buying_date', name: 'buying_date' },
-            { data: 'quantity_of_shares', name: 'quantity_of_shares' },
-            { data: 'price_per_unit', name: 'price_per_unit' },
-            { data: 'total_price', name: 'total_price' },
-            {
-                data: 'id', 
-                name: 'action', 
-                orderable: false, 
-                searchable: false,
-                render: function(data) {
-                    return `
-                        <button class="btn btn-sm btn-primary edit-btn" data-id="${data}">Edit</button>
-                        <button class="btn btn-sm btn-danger delete-btn" data-id="${data}">Delete</button>
-                    `;
+    $(document).ready(function() {
+        // Initialize Buy Report Table
+        var buyTable = $('#buyTable').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '{{ route("report.buy") }}',
+                data: function(d) {
+                    d.date_range = $('#dateRangeFilter').val();
                 }
-            }
-        ],
-        language: {
-            emptyTable: "No data available for the selected date range."
-        }
-    });
-
-    // Initialize Sell Report Table
-    var sellTable = $('#sellTable').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: '{{ route("report.sell") }}',
-            data: function(d) {
-                d.date_range = $('#dateRangeFilter').val();
-            }
-        },
-        columns: [
-            { data: 'fund_name', name: 'fund_name' },
-            { data: 'selling_date', name: 'selling_date' },
-            { data: 'quantity_of_shares', name: 'quantity_of_shares' },
-            { data: 'price_per_unit', name: 'price_per_unit' },
-            { data: 'total_price', name: 'total_price' },
-            {
-                data: 'id', 
-                name: 'action', 
-                orderable: false, 
-                searchable: false,
-                render: function(data) {
-                    return `
-                        <button class="btn btn-sm btn-primary edit-btn" data-id="${data}">Edit</button>
-                        <button class="btn btn-sm btn-danger delete-btn" data-id="${data}">Delete</button>
-                    `;
-                }
-            }
-        ],
-        language: {
-            emptyTable: "No data available for the selected date range."
-        }
-    });
-
-    // Initialize Date Range Picker
-    $('#dateRangeFilter').daterangepicker({
-        autoUpdateInput: false,
-        locale: {
-            cancelLabel: 'Clear'
-        }
-    });
-
-    $('#dateRangeFilter').on('apply.daterangepicker', function(ev, picker) {
-        $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
-        buyTable.ajax.reload();
-        sellTable.ajax.reload();
-    });
-
-    $('#dateRangeFilter').on('cancel.daterangepicker', function(ev, picker) {
-        $(this).val('');
-        buyTable.ajax.reload();
-        sellTable.ajax.reload();
-    });
-
-    // Handle Edit and Delete Actions
-    $('#buyTable, #sellTable').on('click', '.edit-btn', function() {
-        var id = $(this).data('id');
-        alert('Edit action for ID: ' + id);
-    });
-
-    $('#buyTable, #sellTable').on('click', '.delete-btn', function() {
-        var id = $(this).data('id');
-        if (confirm('Are you sure you want to delete this item?')) {
-            $.ajax({
-                url: `/report/delete/${id}`,
-                type: 'DELETE',
-                data: { "_token": "{{ csrf_token() }}" },
-                success: function(response) {
-                    alert('Item deleted successfully.');
-                    buyTable.ajax.reload();
-                    sellTable.ajax.reload();
+            },
+            columns: [{
+                    data: 'fund_name',
+                    name: 'fund_name'
                 },
-                error: function() {
-                    alert('An error occurred while deleting.');
+                {
+                    data: 'buying_date',
+                    name: 'buying_date'
+                },
+                {
+                    data: 'quantity_of_shares',
+                    name: 'quantity_of_shares'
+                },
+                {
+                    data: 'price_per_unit',
+                    name: 'price_per_unit'
+                },
+                {
+                    data: 'total_price',
+                    name: 'total_price'
+                },
+                {
+                    data: 'id',
+                    name: 'action',
+                    orderable: false,
+                    searchable: false,
+                    render: function(data) {
+                        return `
+                        <button class="btn btn-sm btn-primary edit-btn" data-id="${data}">Edit</button>
+                        <button class="btn btn-sm btn-danger delete-btn" data-id="${data}">Delete</button>
+                    `;
+                    }
                 }
-            });
-        }
+            ],
+            language: {
+                emptyTable: "No data available for the selected date range."
+            }
+        });
+
+        // Initialize Sell Report Table
+        var sellTable = $('#sellTable').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '{{ route("report.sell") }}',
+                data: function(d) {
+                    d.date_range = $('#dateRangeFilter').val();
+                }
+            },
+            columns: [{
+                    data: 'fund_name',
+                    name: 'fund_name'
+                },
+                {
+                    data: 'selling_date',
+                    name: 'selling_date'
+                },
+                {
+                    data: 'quantity_of_shares',
+                    name: 'quantity_of_shares'
+                },
+                {
+                    data: 'price_per_unit',
+                    name: 'price_per_unit'
+                },
+                {
+                    data: 'total_price',
+                    name: 'total_price'
+                },
+                {
+                    data: 'id',
+                    name: 'action',
+                    orderable: false,
+                    searchable: false,
+                    render: function(data) {
+                        return `
+                        <button class="btn btn-sm btn-primary edit-btn" data-id="${data}">Edit</button>
+                        <button class="btn btn-sm btn-danger delete-btn" data-id="${data}">Delete</button>
+                    `;
+                    }
+                }
+            ],
+            language: {
+                emptyTable: "No data available for the selected date range."
+            }
+        });
+
+        // Initialize Date Range Picker
+        $('#dateRangeFilter').daterangepicker({
+            autoUpdateInput: false,
+            locale: {
+                cancelLabel: 'Clear'
+            }
+        });
+
+        $('#dateRangeFilter').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+            buyTable.ajax.reload();
+            sellTable.ajax.reload();
+        });
+
+        $('#dateRangeFilter').on('cancel.daterangepicker', function(ev, picker) {
+            $(this).val('');
+            buyTable.ajax.reload();
+            sellTable.ajax.reload();
+        });
+
+        // Handle Edit and Delete Actions
+        $('#buyTable, #sellTable').on('click', '.edit-btn', function() {
+            var id = $(this).data('id');
+            // Redirect to the edit page with the selected report ID
+            window.location.href = '/report/edit/' + id; // Adjust this path according to your routing
+        });
+
+
+
+        $('#buyTable, #sellTable').on('click', '.delete-btn', function() {
+            var id = $(this).data('id');
+            if (confirm('Are you sure you want to delete this item?')) {
+                $.ajax({
+                    url: `/report/delete/${id}`,
+                    type: 'DELETE',
+                    data: {
+                        "_token": "{{ csrf_token() }}"
+                    },
+                    success: function(response) {
+                        alert('Item deleted successfully.');
+                        buyTable.ajax.reload();
+                        sellTable.ajax.reload();
+                    },
+                    error: function() {
+                        alert('An error occurred while deleting.');
+                    }
+                });
+            }
+        });
     });
-});
 
-// Function to toggle between Buy and Sell tables
-function showReport() {
-    const action = document.getElementById('actionSelect').value;
-    const buySection = document.getElementById('buyReport');
-    const sellSection = document.getElementById('sellReport');
+    // Function to toggle between Buy and Sell tables
+    function showReport() {
+        const action = document.getElementById('actionSelect').value;
+        const buySection = document.getElementById('buyReport');
+        const sellSection = document.getElementById('sellReport');
 
-    if (action === 'buy') {
-        buySection.classList.remove('d-none');
-        sellSection.classList.add('d-none');
-        $('#buyTable').DataTable().columns.adjust().draw();
-    } else {
-        sellSection.classList.remove('d-none');
-        buySection.classList.add('d-none');
-        $('#sellTable').DataTable().columns.adjust().draw();
+        if (action === 'buy') {
+            buySection.classList.remove('d-none');
+            sellSection.classList.add('d-none');
+            $('#buyTable').DataTable().columns.adjust().draw();
+        } else {
+            sellSection.classList.remove('d-none');
+            buySection.classList.add('d-none');
+            $('#sellTable').DataTable().columns.adjust().draw();
+        }
     }
-}
 </script>
 @endsection

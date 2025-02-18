@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Buy;
-use App\Models\mutual_nav_history;
+use App\Models\MutualFund_Master;
+use App\Models\MutualNavHistory;
+use App\Models\MutualFundMaster;
 use App\Models\ReportHistory;
 
 class BuyController
@@ -38,7 +40,7 @@ class BuyController
             return response()->json(['nav_price' => 0, 'error' => 'Fund ID and Date are required.'], 422);
         }
 
-        $navHistory = mutual_nav_history::where('fundname_id', $fundId)
+        $navHistory = MutualNavHistory::where('fundname_id', $fundId)
             ->whereDate('date', $date)
             ->first();
 
@@ -48,7 +50,7 @@ class BuyController
 
         return response()->json(['nav_price' => 0, 'error' => 'NAV not found for the selected date.'], 404);
     }
-
+ 
     // Store Buy Fund in the report_history table
     public function store(Request $request)
     {

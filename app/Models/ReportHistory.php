@@ -12,6 +12,7 @@ class ReportHistory extends Model
     // Define the relationship to MutualFund_Master
     public function fund()
     {
-        return $this->belongsTo(\App\Models\MutualFund_Master::class, 'fundname_id');
+        return $this->belongsTo(MutualFund_Master::class, 'fundname_id');
     }
+    
 }

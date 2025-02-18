@@ -61,7 +61,15 @@ Route::get('/report/buy', [ReportController::class, 'getBuyReports'])->name('rep
 Route::get('/report/sell', [ReportController::class, 'getSellReports'])->name('report.sell');
 Route::delete('/report/delete/{id}', [ReportController::class, 'destroy'])->name('report.delete');
 Route::get('/report/edit/{id}', [ReportController::class, 'edit'])->name('report.edit');
+Route::put('/report/{id}', [ReportController::class, 'update'])->name('report.update');
 Route::put('/report/update/{id}', [ReportController::class, 'update'])->name('report.update');
+
+
+
+
+
+
+
 
 
 // buy fund
@@ -70,6 +78,8 @@ Route::get('/buy', [BuyController::class, 'index'])->name('buy');
 Route::get('/buy/funds/search', [BuyController::class, 'getFunds'])->name('buy.funds.search');
 Route::get('/buy/get-nav-price', [BuyController::class, 'getNavPrice'])->name('buy.getNavPrice');
 Route::post('/buy-fund/store', [BuyController::class, 'store'])->name('buyFund.store');
+// Route::put('/buy/{id}', [BuyController::class, 'update'])->name('buy.update');
+
 
 
 
