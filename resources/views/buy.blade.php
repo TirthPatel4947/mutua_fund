@@ -99,13 +99,7 @@
                             <small class="text-danger" id="quantityofshare-error"></small>
                         </div>
 
-                        <!-- Calculation Method Option -->
-                        <div class="form-group">
-                            <label>Calculation Method</label><br>
-                            <input type="radio" name="calculation_method" value="auto" id="auto-calculation" checked> Auto Calculate
-                            <input type="radio" name="calculation_method" value="manual" id="manual-calculation"> Manual
-                        </div>
-
+                    
                     </div>
 
                     <!-- Form Actions -->
@@ -133,185 +127,103 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
 <script>
-    $(document).ready(function() {
-        // Initialize select2 for fund selection
-        $('#fundname').select2({
-            placeholder: "Search and select a fund",
-            allowClear: true,
-            minimumInputLength: 1,
-            ajax: {
-                url: "{{ route('buy.funds.search') }}",
-                dataType: 'json',
-                delay: 250,
-                data: function(params) {
-                    return {
-                        search: params.term
-                    };
-                },
-                processResults: function(data) {
-                    return {
-                        results: $.map(data, function(fund) {
-                            return {
-                                id: fund.id,
-                                text: fund.fundname
-                            };
-                        })
-                    };
-                },
-                cache: true
-            }
-        });
-
-        // Event listener for when the date is selected
-        $('#date').on('change', function() {
-            autoFillPricePerUnit();
-        });
-
-        // Fetch NAV price and auto-fill price per unit when date is selected
-        function autoFillPricePerUnit() {
-            var date = $('#date').val();
-            var fundId = $('#fundname').val();
-
-            if (fundId && date) {
-                $.ajax({
-                    url: "{{ route('buy.getNavPrice') }}",
-                    method: "GET",
-                    data: {
-                        fund_id: fundId,
-                        date: date
-                    },
-                    success: function(response) {
-                        console.log("NAV Price:", response.nav_price);
-                        var navPrice = parseFloat(response.nav_price);
-                        if (!isNaN(navPrice)) {
-                            $('#price_per_unit').val(navPrice.toFixed(2));
-                        } else {
-                            $('#price_per_unit').val('NAV not found');
-                            alert('NAV not found for the selected date.');
-                        }
-                    }
-                });
-            }
+  $(document).ready(function() {
+    // Initialize select2 for fund selection
+    $('#fundname').select2({
+        placeholder: "Search and select a fund",
+        allowClear: true,
+        minimumInputLength: 1,
+        ajax: {
+            url: "{{ route('buy.funds.search') }}",
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return { search: params.term };
+            },
+            processResults: function(data) {
+                return {
+                    results: $.map(data, function(fund) {
+                        return { id: fund.id, text: fund.fundname };
+                    })
+                };
+            },
+            cache: true
         }
+    });
 
-        // Switch between auto and manual calculation
-        $('input[name="calculation_method"]').on('change', function() {
-            if ($(this).val() === 'auto') {
-                enableAutoCalculation();
-            } else {
-                enableManualCalculation();
-            }
-        });
+    // Auto-fill price per unit when date or fund changes
+    $('#date, #fundname').on('change', function() {
+        autoFillPricePerUnit();
+    });
 
-        // Enable auto calculation
-        function enableAutoCalculation() {
-            $('#totalprice').on('input', function() {
-                calculateUnitsFromAmount();
-            });
-            $('#quantityofshare').on('input', function() {
-                calculateAmountFromUnits();
-            });
-        }
-
-        // Enable manual calculation
-        function enableManualCalculation() {
-            $('#totalprice').off('input');
-            $('#quantityofshare').off('input');
-        }
-
-        function calculateUnitsFromAmount() {
-            var investmentAmount = parseFloat($('#totalprice').val());
-            var fundId = $('#fundname').val();
-            var date = $('#date').val();
-
-            if (investmentAmount && fundId && date) {
-                $('#quantityofshare').prop('disabled', true).val('Loading...');
-                $.ajax({
-                    url: "{{ route('buy.getNavPrice') }}",
-                    method: "GET",
-                    data: {
-                        fund_id: fundId,
-                        date: date
-                    },
-                    success: function(response) {
-                        if (response.nav_price > 0) {
-                            var units = investmentAmount / response.nav_price;
-                            $('#quantityofshare').val(units.toFixed(2));
-                        } else {
-                            $('#quantityofshare').val('NAV not found');
-                            alert('NAV not found for the selected date.');
-                        }
-                    },
-                    error: function() {
-                        $('#quantityofshare').val('Error');
-                        alert('An error occurred while fetching the NAV price.');
-                    },
-                    complete: function() {
-                        $('#quantityofshare').prop('disabled', false);
-                    }
-                });
-            }
-        }
-
-        function calculateAmountFromUnits() {
-            var units = parseFloat($('#quantityofshare').val());
-            var fundId = $('#fundname').val();
-            var date = $('#date').val();
-
-            if (units && fundId && date) {
-                $('#totalprice').prop('disabled', true).val('Loading...');
-                $.ajax({
-                    url: "{{ route('buy.getNavPrice') }}",
-                    method: "GET",
-                    data: {
-                        fund_id: fundId,
-                        date: date
-                    },
-                    success: function(response) {
-                        if (response.nav_price > 0) {
-                            var investmentAmount = units * response.nav_price;
-                            $('#totalprice').val(investmentAmount.toFixed(2));
-                        } else {
-                            $('#totalprice').val('NAV not found');
-                            alert('NAV not found for the selected date.');
-                        }
-                    },
-                    error: function() {
-                        $('#totalprice').val('Error');
-                        alert('An error occurred while fetching the NAV price.');
-                    },
-                    complete: function() {
-                        $('#totalprice').prop('disabled', false);
-                    }
-                });
-            }
-        }
-
-        $('#save-btn').on('click', function(e) {
-            e.preventDefault();
-            var formData = {
-                _token: '{{ csrf_token() }}',
-                fundname_id: $('#fundname').val(),
-                date: $('#date').val(),
-                totalprice: $('#totalprice').val(),
-                quantityofshare: $('#quantityofshare').val(),
-                price_per_unit: $('#price_per_unit').val()
-            };
-
+    function autoFillPricePerUnit() {
+        var date = $('#date').val();
+        var fundId = $('#fundname').val();
+        if (fundId && date) {
             $.ajax({
-                url: "{{ isset($buyData) ? route('report.update', $buyData->id) : route('buyFund.store') }}",
-                type: "{{ isset($buyData) ? 'PUT' : 'POST' }}",
-                data: formData,
+                url: "{{ route('buy.getNavPrice') }}",
+                method: "GET",
+                data: { fund_id: fundId, date: date },
                 success: function(response) {
-                    alert(response.message);
-                    window.location.href = "{{ route('dashboard') }}";
-                },
-                error: function(xhr) {
-                    alert("Failed to save the form data. Please try again.");
+                    if (response.nav_price) {
+                        $('#price_per_unit').val(parseFloat(response.nav_price).toFixed(2));
+                    } else {
+                        $('#price_per_unit').val('NAV not found');
+                        alert('NAV not found for the selected date.');
+                    }
                 }
             });
-        });
+        }
+    }
 
-        enableAutoCalculation(); // Default option set to auto
+    // Auto calculation logic
+    $('#totalprice').on('input', function() {
+        calculateUnitsFromAmount();
     });
+
+    $('#quantityofshare').on('input', function() {
+        calculateAmountFromUnits();
+    });
+
+    function calculateUnitsFromAmount() {
+        var investmentAmount = parseFloat($('#totalprice').val());
+        var pricePerUnit = parseFloat($('#price_per_unit').val());
+        if (!isNaN(investmentAmount) && !isNaN(pricePerUnit) && pricePerUnit > 0) {
+            $('#quantityofshare').val((investmentAmount / pricePerUnit).toFixed(2));
+        }
+    }
+
+    function calculateAmountFromUnits() {
+        var units = parseFloat($('#quantityofshare').val());
+        var pricePerUnit = parseFloat($('#price_per_unit').val());
+        if (!isNaN(units) && !isNaN(pricePerUnit) && pricePerUnit > 0) {
+            $('#totalprice').val((units * pricePerUnit).toFixed(2));
+        }
+    }
+
+    $('#save-btn').on('click', function(e) {
+        e.preventDefault();
+        var formData = {
+            _token: '{{ csrf_token() }}',
+            fundname_id: $('#fundname').val(),
+            date: $('#date').val(),
+            totalprice: $('#totalprice').val(),
+            quantityofshare: $('#quantityofshare').val(),
+            price_per_unit: $('#price_per_unit').val()
+        };
+        $.ajax({
+            url: "{{ isset($buyData) ? route('report.update', $buyData->id) : route('buyFund.store') }}",
+            type: "{{ isset($buyData) ? 'PUT' : 'POST' }}",
+            data: formData,
+            success: function(response) {
+                alert(response.message);
+                window.location.href = "{{ route('dashboard') }}";
+            },
+            error: function() {
+                alert("Failed to save the form data. Please try again.");
+            }
+        });
+    });
+});
+
 </script>
