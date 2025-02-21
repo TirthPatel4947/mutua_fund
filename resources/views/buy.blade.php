@@ -134,7 +134,7 @@
         allowClear: true,
         minimumInputLength: 1,
         ajax: {
-            url: "{{ route('buy.funds.search') }}",
+            url: "{{ route('sell.funds.search') }}",
             dataType: 'json',
             delay: 250,
             data: function(params) {
@@ -161,7 +161,7 @@
         var fundId = $('#fundname').val();
         if (fundId && date) {
             $.ajax({
-                url: "{{ route('buy.getNavPrice') }}",
+                url: "{{ route('sale.getNavPrice') }}",
                 method: "GET",
                 data: { fund_id: fundId, date: date },
                 success: function(response) {
