@@ -11,7 +11,7 @@ use App\Http\Controllers\SaleController;
 use App\Http\Controllers\portfoliocontroller;
 use App\Http\Controllers\MutualFundMasterController;
 use App\Http\Controllers\navcontroller;
-
+use App\Http\Controllers\AuthController;
 
 
 
@@ -23,7 +23,18 @@ Route::get('/', function () {
 Route::get('/login', function () {
     return view('Loginpage');
 });
+// routes/web.php
 
+
+
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+
+Route::get('/signup', [AuthController::class, 'showSignupForm'])->name('signup');
+Route::post('/signup', [AuthController::class, 'storeSignup'])->name('signup.store');
+Route::post('/password/create', [AuthController::class, 'createPassword'])->name('password.create');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // deshbord page
 Route::get('/dashboard', [DashboardController::class, 'showInvestmentAmount'])->name('dashboard');
