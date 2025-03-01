@@ -51,7 +51,7 @@
                                 <i class="feather icon-user"></i> Edit Profile
                             </a>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="login-with-bg-image.html">
+                            <a class="dropdown-item" href="{{route('logout')}}">
                                 <i class="feather icon-power"></i> Logout
                             </a>
                         </div>

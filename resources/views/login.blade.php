@@ -155,7 +155,7 @@
         <!-- Form Container -->
         <div class="form-container">
             <h1>Login with FundHorizon.com</h1>
-            <p>Already registered? Log in to access your account.</p>
+            <p>Already registered? Log in to access your account.</p> 
 
             <!-- Login Form -->
             <form method="POST" action="{{ route('login') }}" id="loginForm">
