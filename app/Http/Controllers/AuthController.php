@@ -54,16 +54,25 @@ class AuthController
         return redirect()->route('login')->with('status', 'Account created successfully! Please log in.');
     }
 
-    public function login(Request $request){
-        $email     = $request->email;
-        $password  = $request->password;
-       if(Auth::attempt(array('email' => $email, 'password' => $password)))
-       {
-        return redirect()->intended(route('dashboard'));
-       }else{
-        return redirect()->intended(route('login'));
-       }
+    public function login(Request $request)
+    {
+        // Validate the email and password fields
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|min:6',
+        ]);
+    
+        $credentials = $request->only('email', 'password');
+    
+        if (Auth::attempt($credentials)) {
+            return redirect()->intended(route('dashboard'));
+        }
+    
+        // Redirect back with an error message if authentication fails
+        return redirect()->route('login')->with('error', 'Invalid email or password.');
+
     }
+    
     public function logout(Request $request){
         Auth::logout();
         return redirect()->intended(route('login'));
