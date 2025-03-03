@@ -185,8 +185,8 @@
             }
         }
     </style>
-  <!-- Include jQuery (Make sure jQuery is available in your project) -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Include jQuery (Make sure jQuery is available in your project) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
 <body>
@@ -340,7 +340,7 @@
         // Password Validation & Submit with AJAX
         document.getElementById('passwordForm').onsubmit = function(e) {
             e.preventDefault();
-            
+
             const password = document.getElementById('signupPassword').value;
             const confirmPassword = document.getElementById('signupConfirmPassword').value;
             const passwordError = document.getElementById('passwordError');
@@ -377,17 +377,27 @@
 
             // Send the data via AJAX to store it in the database
             $.ajax({
-                url: "{{ route('signup.store') }}", // Make sure this route matches your backend
+                url: "{{ route('signup.store') }}", // Ensure this matches your backend route
                 type: 'POST',
                 data: formData,
                 success: function(response) {
-                    alert('Account created successfully!');
-                    // Optionally, redirect or show a confirmation message
+                    alert('Account created successfully! Please login login...');
+                    window.location.href = "{{ route('login') }}"; // Redirect to login page
                 },
-                error: function(xhr, status, error) {
-                    alert('An error occurred. Please try again later.');
+                error: function(xhr) {
+                    let errorMessage = 'An error occurred. Please try again later.';
+
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        let errors = xhr.responseJSON.errors;
+                        errorMessage = Object.values(errors).flat().join('\n'); // Combine multiple errors into one message
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+
+                    alert(errorMessage);
                 }
             });
+
         };
     </script>
 </body>

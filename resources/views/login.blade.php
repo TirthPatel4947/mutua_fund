@@ -153,47 +153,45 @@
         <h1>Login with FundHorizon.com</h1>
         <p>Already registered? Log in to access your account.</p>
 
+        @if(session('status'))
+            <div class="alert alert-success">
+                {{ session('status') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <p class="error">{{ session('error') }}</p>
+        @endif
+
         <form method="POST" action="{{ route('login') }}" id="loginForm">
             @csrf
-            
-            @if(session('error'))
-                <p class="error">{{ session('error') }}</p>
-            @endif
-            
             <input type="email" id="loginEmail" name="email" placeholder="Email Address" required value="{{ old('email') }}">
             <input type="password" id="loginPassword" name="password" placeholder="Password" required>
-            
             <p><a href="#" onclick="forgotPasswordForm()">Forgot Password?</a></p>
-
             <button type="submit" class="submit-btn">Login</button>
             <p>Don't have an account? <a href="{{ route('signup') }}">Sign up</a></p>
         </form>
     </div>
 
+    <script>
+        function forgotPasswordForm() {
+            document.querySelector('.form-container').innerHTML = `
+                <h2>Forgot Password</h2>
+                <p>Enter your email address to receive a password reset link.</p>
+                <form method="POST" id="forgotPasswordForm">
+                    @csrf
+                    <input type="email" name="email" placeholder="Email Address" required>
+                    <button type="submit" class="submit-btn">Submit</button>
+                    <button type="button" class="red-btn" onclick="goBackToLogin()">Back to Login</button>
+                </form>
+                <p class="error" id="forgotPasswordError" style="display: none;">Please enter a valid email address.</p>
+            `;
+        }
 
+        function goBackToLogin() {
+            window.location.href = "{{ route('login') }}";
+        }
+    </script>
+</body>
 
-        <script>
-            // Show the forgot password form
-            function forgotPasswordForm() {
-                document.querySelector('.form-container').innerHTML = `
-                    <h2>Forgot Password</h2>
-                    <p>Enter your email address to receive a password reset link.</p>
-                    <form method="POST" id="forgotPasswordForm">
-                        @csrf
-                        <input type="email" name="email" placeholder="Email Address" required>
-                        <button type="submit" class="submit-btn">Submit</button>
-                        <button type="button" class="red-btn" onclick="goBackToLogin()">Back to Login</button>
-                    </form>
-                    <p class="error" id="forgotPasswordError" style="display: none;">Please enter a valid email address.</p>
-                `;
-            }
-
-            // Go back to login form from forgot password
-            function goBackToLogin() {
-                window.location.href = "{{ route('login') }}";
-            }
-        </script>
-
-    </body>
-
-    </html>
+</html>
