@@ -7,15 +7,15 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Buy;
 use App\Models\MutualFund_Master;
 use App\Models\MutualNavHistory;
-use App\Models\MutualFundMaster;
 use App\Models\ReportHistory;
+use App\Models\Portfolio;
 
-class BuyController
+class BuyController 
 {
     // Display the buy form
     public function index()
     {
-        $funds = Buy::all(); // Fetch available funds
+        $funds = MutualFund_Master::all(); // Fetch available funds
         return view('buy', compact('funds')); // Pass funds to the view
     }
 
@@ -24,7 +24,7 @@ class BuyController
     {
         $search = $request->input('search');
     
-        $funds = Buy::where('fundname', 'LIKE', '%' . $search . '%')
+        $funds = MutualFund_Master::where('fundname', 'LIKE', '%' . $search . '%')
             ->get(['id', 'fundname']);
     
         // Convert to Select2-compatible format
@@ -34,7 +34,6 @@ class BuyController
     
         return response()->json(['results' => $formattedFunds]); // Correct JSON format
     }
-    
 
     // Fetch NAV price for a selected fund and date
     public function getNavPrice(Request $request)
@@ -63,6 +62,7 @@ class BuyController
         // Validate the incoming request
         $validatedData = $request->validate([
             'fundname_id' => 'required|exists:mutualfund_master,id', // Validate fundname_id
+            'portfolio_id' => 'required|exists:portfolios,id',  // Validate portfolio_id (Ensure it exists in the portfolios table)
             'date' => 'required|date',
             'totalprice' => 'required|numeric|min:0',
             'quantityofshare' => 'required|numeric|min:0',
@@ -77,9 +77,10 @@ class BuyController
             }
     
             // Store the report history with status = 1 and user ID
-            ReportHistory::create([
+            $reportHistory = ReportHistory::create([
                 'user_id' => $userId, // Store the authenticated user's ID
                 'fundname_id' => $validatedData['fundname_id'],
+                'portfolio_id' => $validatedData['portfolio_id'], // Store the portfolio_id
                 'date' => $validatedData['date'],
                 'unit' => $validatedData['quantityofshare'],
                 'price' => $validatedData['totalprice'],
@@ -92,5 +93,28 @@ class BuyController
             return response()->json(['error' => 'Failed to save the form data. Error: ' . $e->getMessage()], 500);
         }
     }
+    
+   // Fetch portfolios dynamically for select2 dropdown (User-specific portfolios)
+public function getPortfolios(Request $request)
+{
+    $search = $request->input('search');
+    $user_id = auth()->id(); // Get the current authenticated user's ID
+    
+    // Fetch portfolios that belong to the authenticated user and match the search term
+    $portfolios = Portfolio::where('user_id', $user_id)
+        ->where('name', 'like', "%$search%")
+        ->select('id', 'name')
+        ->get();
+
+    return response()->json([
+        'results' => $portfolios->map(function ($portfolio) {
+            return [
+                'id' => $portfolio->id,
+                'text' => $portfolio->name
+            ];
+        })
+    ]);
+}
+
     
 }

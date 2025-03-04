@@ -41,9 +41,9 @@ Route::group(['middleware' => ['UserAccess']], function () {
     Route::get('/change-password', function () {
         return view('change-password');
     })->name('password.form');
-    
+
     Route::put('/change-password', [AuthController::class, 'changePassword'])->name('password.update');
-    
+
 
     // deshbord page
     Route::get('/dashboard', [DashboardController::class, 'showInvestmentAmount'])->name('dashboard');
@@ -56,7 +56,7 @@ Route::group(['middleware' => ['UserAccess']], function () {
     Route::put('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::post('/profile/avatar/update', [UserController::class, 'updateAvatar'])->name('profile.avatar.update');
     Route::post('/profile/avatar/remove', [UserController::class, 'removeAvatar'])->name('profile.avatar.remove');
-    
+
     // pan card
     Route::get('/card', [CardController::class, 'showForm'])->name('card');
     Route::post('/card', [CardController::class, 'processForm']);
@@ -89,6 +89,9 @@ Route::group(['middleware' => ['UserAccess']], function () {
     Route::get('/buy/funds/search', [BuyController::class, 'getFunds'])->name('buy.funds.search');
     Route::get('/buy/get-nav-price', [BuyController::class, 'getNavPrice'])->name('buy.getNavPrice');
     Route::post('/buy-fund/store', [BuyController::class, 'store'])->name('buyFund.store');
+    // Add this route for fetching portfolios
+    Route::get('/get-portfolios', [BuyController::class, 'getPortfolios']);
+
 
     // sale fund
     Route::get('/sale', [SaleController::class, 'index'])->name('sale');
@@ -100,10 +103,9 @@ Route::group(['middleware' => ['UserAccess']], function () {
     //portfolio
     // Route to display user's portfolios
     Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio.index')->middleware('auth');
-    
+
     // Route to store a new portfolio (Form Submission)
     Route::post('/portfolio', [PortfolioController::class, 'store'])->name('portfolio.store')->middleware('auth');
-    
 });
 
 
