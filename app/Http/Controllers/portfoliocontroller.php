@@ -1,30 +1,46 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Portfolio;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 class PortfolioController
 {
-    // GET method to show the portfolio page (form or portfolio data)
+    // Show portfolios for the logged-in user
     public function index()
     {
-        // Return the portfolio view (for displaying the portfolio form or list)
-        return view('portfolio');
+        // Ensure user is authenticated
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'You must be logged in.');
+        }
+
+        // Fetch only the logged-in user's portfolios
+        $portfolios = Portfolio::where('user_id', Auth::id())->get();
+
+        return view('portfolio', compact('portfolios'));
     }
 
-    // POST method to handle the form submission (e.g., create or update portfolio)
+    // Store the portfolio for the logged-in user
     public function store(Request $request)
     {
-        // Validate the incoming form data
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'You must be logged in to create a portfolio.');
+        }
+    
         $validatedData = $request->validate([
-            'portfolio_name' => 'required|string|max:255',
+            'name' => 'required|string|max:255'
         ]);
-
-        // You can save or update the portfolio in the database
-        // Portfolio::create($validatedData); // Example for creating a new portfolio
-
-        // Redirect or send a success message
-        return redirect()->route('portfolio.index')->with('success', 'Portfolio created successfully!');
+    
+        Portfolio::create([
+            'name' => $validatedData['name'],
+            'user_id' => Auth::id()
+        ]);
+    
+        // Flash success message
+        Session::flash('success', 'Portfolio created successfully!');
+    
+        return redirect()->route('portfolio.index'); // Redirect back to the portfolio page
     }
 }

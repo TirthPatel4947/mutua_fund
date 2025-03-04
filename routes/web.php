@@ -98,8 +98,12 @@ Route::group(['middleware' => ['UserAccess']], function () {
 
 
     //portfolio
-    Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio.index');
-    Route::post('/portfolio', [PortfolioController::class, 'store'])->name('portfolio.store');
+    // Route to display user's portfolios
+    Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio.index')->middleware('auth');
+    
+    // Route to store a new portfolio (Form Submission)
+    Route::post('/portfolio', [PortfolioController::class, 'store'])->name('portfolio.store')->middleware('auth');
+    
 });
 
 
