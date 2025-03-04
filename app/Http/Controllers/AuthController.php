@@ -78,5 +78,29 @@ class AuthController
         return redirect()->intended(route('login'));
     }
 
-  
+    public function changePassword(Request $request)
+    {
+        // Validate the input
+        $request->validate([
+            'current_password' => ['required'],
+            'new_password' => ['required', 'min:8', 'confirmed'],
+        ]);
+    
+        // Get the currently authenticated user
+        $user = Auth::user();
+    
+        // Check if the current password matches
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'The current password is incorrect.']);
+        }
+    
+        // Update the password
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+    
+        // Redirect to dashboard with success message
+        return redirect()->route('dashboard')->with('success', 'Password updated successfully!');
+    }
+    
+    
 }

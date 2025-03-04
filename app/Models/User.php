@@ -17,16 +17,11 @@ class User extends Authenticatable
         'first_name', 
         'last_name', 
         'email', 
-        'phone_number', 
+        'phone', 
         'birthdate', 
         'password',
+        'pan_no',
+        'avatar',
     ];
-
-  
-
-   
-
-  
-
    
 }

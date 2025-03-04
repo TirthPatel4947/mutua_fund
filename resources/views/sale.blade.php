@@ -99,12 +99,7 @@
                             <small class="text-danger" id="quantityofshare-error"></small>
                         </div>
 
-                        <!-- Calculation Method Option -->
-                        <div class="form-group">
-                            <label>Calculation Method</label><br>
-                            <input type="radio" name="calculation_method" value="auto" id="auto-calculation" checked> Auto Calculate
-                            <input type="radio" name="calculation_method" value="manual" id="manual-calculation"> Manual
-                        </div>
+                     
 
                     </div>
 
@@ -134,33 +129,24 @@
 
 <script>
     $(document).ready(function() {
-        // Initialize select2 for fund selection
-        $('#fundname').select2({
-            placeholder: "Search and select a fund",
-            allowClear: true,
-            minimumInputLength: 1,
-            ajax: {
-                url: "{{ route('buy.funds.search') }}",
-                dataType: 'json',
-                delay: 250,
-                data: function(params) {
-                    return {
-                        search: params.term
-                    };
-                },
-                processResults: function(data) {
-                    return {
-                        results: $.map(data, function(fund) {
-                            return {
-                                id: fund.id,
-                                text: fund.fundname
-                            };
-                        })
-                    };
-                },
-                cache: true
-            }
-        });
+    // Initialize select2 for fund selection
+    $('#fundname').select2({
+        placeholder: "Search and select a fund",
+        allowClear: true,
+        minimumInputLength: 1,
+        ajax: {
+            url: "{{ route('sell.funds.search') }}",
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return { search: params.term };
+            },
+            processResults: function(data) {
+                return { results: data.results }; // Correctly process response
+            },
+            cache: true
+        }
+    });
 
         // Auto-fill price per unit when date or fund changes
         $('#date, #fundname').on('change', function() {

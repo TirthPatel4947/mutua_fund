@@ -10,8 +10,12 @@
                 <div class="row mb-4">
                     <div class="col-6 text-left">
                         <h3 class="text-muted">Investor</h3>
-                        <h1 class="text-bold-600 text-primary text-uppercase" style="font-size: 30px;">Tirth Patel</h1>
+                        <h1 class="text-bold-600 text-primary text-uppercase" style="font-size: 30px;">
+                            {{ Auth::user()->first_name . ' ' . Auth::user()->last_name ?? 'Guest' }}
+                        </h1>
                     </div>
+             
+                
                     <div class="col-6 text-right">
                         <a href="{{ route('card') }}">
                             <button class="btn btn-danger rounded-pill px-4 py-1" style="font-size: 16px;">

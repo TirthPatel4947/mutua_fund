@@ -127,29 +127,26 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
 <script>
-  $(document).ready(function() {
+ $(document).ready(function() {
     // Initialize select2 for fund selection
     $('#fundname').select2({
         placeholder: "Search and select a fund",
         allowClear: true,
         minimumInputLength: 1,
         ajax: {
-            url: "{{ route('sell.funds.search') }}",
+            url: "{{ route('buy.funds.search') }}",
             dataType: 'json',
             delay: 250,
             data: function(params) {
                 return { search: params.term };
             },
             processResults: function(data) {
-                return {
-                    results: $.map(data, function(fund) {
-                        return { id: fund.id, text: fund.fundname };
-                    })
-                };
+                return { results: data.results }; // Correctly process response
             },
             cache: true
         }
     });
+
 
     // Auto-fill price per unit when date or fund changes
     $('#date, #fundname').on('change', function() {
@@ -161,7 +158,7 @@
         var fundId = $('#fundname').val();
         if (fundId && date) {
             $.ajax({
-                url: "{{ route('sale.getNavPrice') }}",
+                url: "{{ route('buy.getNavPrice') }}",
                 method: "GET",
                 data: { fund_id: fundId, date: date },
                 success: function(response) {

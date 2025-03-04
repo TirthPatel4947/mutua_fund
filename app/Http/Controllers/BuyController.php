@@ -23,12 +23,18 @@ class BuyController
     public function getFunds(Request $request)
     {
         $search = $request->input('search');
-
+    
         $funds = Buy::where('fundname', 'LIKE', '%' . $search . '%')
             ->get(['id', 'fundname']);
-
-        return response()->json($funds);
+    
+        // Convert to Select2-compatible format
+        $formattedFunds = $funds->map(function ($fund) {
+            return ['id' => $fund->id, 'text' => $fund->fundname];
+        });
+    
+        return response()->json(['results' => $formattedFunds]); // Correct JSON format
     }
+    
 
     // Fetch NAV price for a selected fund and date
     public function getNavPrice(Request $request)
@@ -61,21 +67,30 @@ class BuyController
             'totalprice' => 'required|numeric|min:0',
             'quantityofshare' => 'required|numeric|min:0',
         ]);
-
+    
         try {
-            // Store the report history with status = 1
+            // Get authenticated user's ID
+            $userId = auth()->id(); // Ensure user is authenticated
+    
+            if (!$userId) {
+                return response()->json(['error' => 'User not authenticated.'], 401);
+            }
+    
+            // Store the report history with status = 1 and user ID
             ReportHistory::create([
-                'fundname_id' => $validatedData['fundname_id'], // Store as fundname_id
+                'user_id' => $userId, // Store the authenticated user's ID
+                'fundname_id' => $validatedData['fundname_id'],
                 'date' => $validatedData['date'],
                 'unit' => $validatedData['quantityofshare'],
                 'price' => $validatedData['totalprice'],
                 'total' => $validatedData['quantityofshare'] * $validatedData['totalprice'],
-                'status' => 1, // Set status as 1
+                'status' => 1,
             ]);
-
+    
             return response()->json(['message' => 'Fund purchase successfully saved!'], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to save the form data. Error: ' . $e->getMessage()], 500);
         }
     }
+    
 }

@@ -10,7 +10,8 @@
                 </li>
                 <li class="nav-item">
                     <a class="navbar-brand" href="../../../html/ltr/vertical-menu-template/index.html">
-                        <img src="{{ asset('assets/images/logo.png') }}" alt="FundHorizon Logo" style="width: 40px; height: auto;">
+                        <img src="{{ asset('assets/images/logo.png') }}" alt="FundHorizon Logo"
+                            style="width: 40px; height: auto;">
                         <h2 class="brand-text">FundHorizon</h2>
                     </a>
                 </li>
@@ -42,19 +43,26 @@
                     <li class="dropdown dropdown-user nav-item">
                         <a class="dropdown-toggle nav-link dropdown-user-link" href="#" data-toggle="dropdown">
                             <div class="avatar avatar-online">
-                                <img src="../../../app-assets/images/portrait/small/avatar-s-1.png" alt="avatar">
+                                <img src="{{ auth()->user()->avatar ? asset('assets/images/' . auth()->user()->avatar) : asset('app-assets/images/portrait/small/avatar-s-1.png') }}"
+                                    alt="avatar" class="rounded-circle" width="65" height="65">
                             </div>
-                            <span class="user-name">Tirth Patel</span>
+                            <span class="user-name">
+                                {{ auth()->user()->first_name }} {{ auth()->user()->last_name }}
+                            </span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <a class="dropdown-item" href="{{ route('user') }}">
                                 <i class="feather icon-user"></i> Edit Profile
                             </a>
+                            <a class="dropdown-item" href="{{ route('password.form') }}">
+                                <i class="feather icon-lock"></i> Change Password
+                            </a>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="{{route('logout')}}">
+                            <a class="dropdown-item" href="{{ route('logout') }}">
                                 <i class="feather icon-power"></i> Logout
                             </a>
                         </div>
+                        
                     </li>
                 </ul>
             </div>

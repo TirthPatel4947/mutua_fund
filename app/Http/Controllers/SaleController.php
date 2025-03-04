@@ -22,16 +22,18 @@ class SaleController
     // Fetch funds dynamically for the AJAX request (used in the select2)
     public function getFunds(Request $request)
     {
-        // Get the search term from the request
         $search = $request->input('search');
-
-        // Query to filter funds based on the search
-        $funds = Sale::where('fundname', 'LIKE', '%' . $search . '%')->get(['id', 'fundname']);
-
-        // Return the filtered funds as a JSON response
-        return response()->json($funds);
+    
+        $funds = sale::where('fundname', 'LIKE', '%' . $search . '%')
+            ->get(['id', 'fundname']);
+    
+        // Convert to Select2-compatible format
+        $formattedFunds = $funds->map(function ($fund) {
+            return ['id' => $fund->id, 'text' => $fund->fundname];
+        });
+    
+        return response()->json(['results' => $formattedFunds]); // Correct JSON format
     }
-
     // Fetch NAV price based on fund_id and date
     public function getNavPrice(Request $request)
     {
@@ -59,19 +61,23 @@ class SaleController
             'totalprice' => 'required|numeric|min:0',
             'quantityofshare' => 'required|numeric|min:0', // Quantity must be positive here
         ]);
-
+    
         try {
+            // Get the authenticated user ID
+            $userId = auth()->id(); 
+    
             // Retrieve fund name based on the ID
             $fundName = DB::table('mutualfund_master')
                 ->where('id', $validatedData['fundname_id'])
                 ->value('fundname');
-
+    
             if (!$fundName) {
                 return response()->json(['error' => 'Invalid Fund ID provided.'], 422);
             }
-
-            // Store the report history with status = 0 for sale
+    
+            // Store the report history with status = 0 for sale and user_id
             ReportHistory::create([
+                'user_id' => $userId, // Store the user ID
                 'fundname_id' => $validatedData['fundname_id'],
                 'date' => $validatedData['date'],
                 'unit' => -1 * $validatedData['quantityofshare'], // Store units as negative for sale
@@ -79,10 +85,11 @@ class SaleController
                 'total' => -1 * $validatedData['quantityofshare'] * $validatedData['totalprice'], // Total is negative
                 'status' => 0, // Set status as 0 for sale
             ]);
-
+    
             return response()->json(['message' => 'Fund sale successfully saved!'], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to save the form data. Error: ' . $e->getMessage()], 500);
         }
     }
+    
 }

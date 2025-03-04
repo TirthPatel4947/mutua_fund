@@ -23,9 +23,13 @@ class ReportController
      */
     public function getBuyReports(Request $request)
     {
+        // Get the authenticated user ID
+        $userId = auth()->id();
+    
         $buyReports = ReportHistory::with('fund')
-            ->where('status', 1);
-
+            ->where('status', 1)
+            ->where('user_id', $userId); // Filter by user_id
+    
         // Apply date range filter if provided
         if ($request->has('date_range') && $request->date_range) {
             $dateRange = explode(' - ', $request->date_range);
@@ -33,7 +37,7 @@ class ReportController
             $endDate = \Carbon\Carbon::parse($dateRange[1])->endOfDay();
             $buyReports->whereBetween('date', [$startDate, $endDate]);
         }
-
+    
         return DataTables::of($buyReports)
             ->addColumn('fund_name', function ($report) {
                 return optional($report->fund)->fundname ?? 'N/A';
@@ -52,15 +56,19 @@ class ReportController
             })
             ->make(true);
     }
-
+    
     /**
      * Get Sell Reports (Yajra DataTables) with Date Range Filter
      */
     public function getSellReports(Request $request)
     {
+        // Get the authenticated user ID
+        $userId = auth()->id();
+    
         $sellReports = ReportHistory::with('fund')
-            ->where('status', 0);
-
+            ->where('status', 0)
+            ->where('user_id', $userId); // Filter by user_id
+    
         // Apply date range filter if provided
         if ($request->has('date_range') && $request->date_range) {
             $dateRange = explode(' - ', $request->date_range);
@@ -68,7 +76,7 @@ class ReportController
             $endDate = \Carbon\Carbon::parse($dateRange[1])->endOfDay();
             $sellReports->whereBetween('date', [$startDate, $endDate]);
         }
-
+    
         return DataTables::of($sellReports)
             ->addColumn('fund_name', function ($report) {
                 return optional($report->fund)->fundname ?? 'N/A';
@@ -87,6 +95,7 @@ class ReportController
             })
             ->make(true);
     }
+    
 
 
 
@@ -95,20 +104,30 @@ class ReportController
      */
     public function destroy($id)
     {
-        $report = ReportHistory::findOrFail($id);
+        $userId = auth()->id();
+        
+        // Find the record with a user_id check
+        $report = ReportHistory::where('id', $id)->where('user_id', $userId)->first();
+    
+        if (!$report) {
+            return response()->json(['error' => 'Unauthorized or record not found.'], 403);
+        }
+    
         $report->delete();
-
+    
         return response()->json(['success' => 'Record deleted successfully.']);
     }
+    
     // Show the form for editing a specific buy fund record
     public function edit($id)
     {
-        // Fetch the data using the ID and load the related fund data
-        $buyData = ReportHistory::with('fund')->find($id);
+        $userId = auth()->id();
     
-        // Check if data exists
+        // Fetch the data ensuring it belongs to the logged-in user
+        $buyData = ReportHistory::with('fund')->where('id', $id)->where('user_id', $userId)->first();
+    
         if (!$buyData) {
-            return response()->json(['error' => 'Data not found.'], 404);
+            return response()->json(['error' => 'Unauthorized or data not found.'], 403);
         }
     
         // Fetch all available funds for the dropdown
@@ -128,6 +147,7 @@ class ReportController
         // Otherwise, return the view with data
         return view('buy', compact('buyData', 'funds'));
     }
+    
 
     public function update(Request $request, $id)
     {
@@ -139,13 +159,19 @@ class ReportController
         ]);
     
         try {
-            $buyRecord = ReportHistory::findOrFail($id);
+            $userId = auth()->id();
+    
+            // Find the record ensuring it belongs to the logged-in user
+            $buyRecord = ReportHistory::where('id', $id)->where('user_id', $userId)->first();
+    
+            if (!$buyRecord) {
+                return response()->json(['error' => 'Unauthorized or record not found.'], 403);
+            }
     
             $buyRecord->fundname_id = $validatedData['fundname_id'];
             $buyRecord->date = $validatedData['date'];
             $buyRecord->unit = $validatedData['quantityofshare'];
             $buyRecord->price = $validatedData['totalprice'];
-            // $buyRecord->total = $validatedData['quantityofshare'] * $validatedData['totalprice'];
             $buyRecord->status = 1;
             $buyRecord->save();
     
@@ -154,14 +180,17 @@ class ReportController
             return response()->json(['error' => 'Failed to update the form data. Error: ' . $e->getMessage()], 500);
         }
     }
+    
     public function editSale($id)
     {
-        // Fetch the data using the ID and load the related fund data
-        $saleData = ReportHistory::with('fund')->find($id);
+        $userId = auth()->id(); // Get authenticated user's ID
+    
+        // Fetch the sale data ensuring it belongs to the logged-in user
+        $saleData = ReportHistory::with('fund')->where('id', $id)->where('user_id', $userId)->first();
     
         // Check if data exists
         if (!$saleData) {
-            return response()->json(['error' => 'Data not found.'], 404);
+            return response()->json(['error' => 'Unauthorized or data not found.'], 403);
         }
     
         // Fetch all available funds for the dropdown
@@ -181,6 +210,7 @@ class ReportController
         // Otherwise, return the view with data
         return view('sale', compact('saleData', 'funds'));
     }
+    
     public function updateSale(Request $request, $id)
     {
         $validatedData = $request->validate([
@@ -191,15 +221,20 @@ class ReportController
         ]);
     
         try {
-            $saleRecord = ReportHistory::findOrFail($id);
+            $userId = auth()->id();
+    
+            // Find the sale record ensuring it belongs to the logged-in user
+            $saleRecord = ReportHistory::where('id', $id)->where('user_id', $userId)->first();
+    
+            if (!$saleRecord) {
+                return response()->json(['error' => 'Unauthorized or record not found.'], 403);
+            }
     
             // Update the sale record with negative values
             $saleRecord->fundname_id = $validatedData['fundname_id'];
             $saleRecord->date = $validatedData['date'];
             $saleRecord->unit = -abs($validatedData['quantityofshare']);  // Ensure quantity is negative for sale
             $saleRecord->price = -abs($validatedData['totalprice']);  // Ensure price is negative for sale
-    
-            // You can also calculate the total price if needed, and mark it as a sale (status = 0)
             $saleRecord->status = 0; // Marking as a sale
             $saleRecord->save();
     

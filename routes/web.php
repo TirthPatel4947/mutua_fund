@@ -12,7 +12,7 @@ use App\Http\Controllers\portfoliocontroller;
 use App\Http\Controllers\MutualFundMasterController;
 use App\Http\Controllers\navcontroller;
 use App\Http\Controllers\AuthController;
-
+use App\Http\Controllers\UserController;
 
 
 Route::get('/', function () {
@@ -37,14 +37,26 @@ Route::post('/password/create', [AuthController::class, 'createPassword'])->name
 
 Route::group(['middleware' => ['UserAccess']], function () {
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+    // change password
+    Route::get('/change-password', function () {
+        return view('change-password');
+    })->name('password.form');
+    
+    Route::put('/change-password', [AuthController::class, 'changePassword'])->name('password.update');
+    
+
     // deshbord page
     Route::get('/dashboard', [DashboardController::class, 'showInvestmentAmount'])->name('dashboard');
 
     Route::get('/fund-details', [DashboardController::class, 'fundDetails'])->name('fund.details');
     Route::get('/get-investment-data', [DashboardController::class, 'getInvestmentData']);
+
     // edit account
     Route::get('/user', [profilecontroller::class, 'edit'])->name('user');
-
+    Route::put('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/profile/avatar/update', [UserController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::post('/profile/avatar/remove', [UserController::class, 'removeAvatar'])->name('profile.avatar.remove');
+    
     // pan card
     Route::get('/card', [CardController::class, 'showForm'])->name('card');
     Route::post('/card', [CardController::class, 'processForm']);
@@ -84,7 +96,7 @@ Route::group(['middleware' => ['UserAccess']], function () {
     Route::get('/sale/get-nav-price', [SaleController::class, 'getNavPrice'])->name('sale.getNavPrice');
     Route::post('/sale/store', [SaleController::class, 'store'])->name('sale.store'); // Save Sale Data
 
-    
+
     //portfolio
     Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio.index');
     Route::post('/portfolio', [PortfolioController::class, 'store'])->name('portfolio.store');

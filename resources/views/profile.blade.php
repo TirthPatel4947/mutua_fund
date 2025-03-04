@@ -20,10 +20,13 @@
                             <!-- users edit media object start -->
                             <div class="media mb-2">
                                 <a class="mr-2" href="#">
-                                    <img id="user-avatar" src="../../../app-assets/images/portrait/small/avatar-s-26.png" alt="users avatar" class="users-avatar-shadow rounded-circle" height="64" width="64">
+                                    <img id="user-avatar" 
+                                    src="{{ auth()->user()->avatar ? asset('assets/images/' . auth()->user()->avatar) : asset('app-assets/images/portrait/small/avatar-s-26.png') }}" 
+                                    onerror="this.onerror=null; this.src='{{ asset('app-assets/images/portrait/small/avatar-s-26.png') }}';"
+                                    alt="User Avatar" class="users-avatar-shadow rounded-circle" height="64" width="64">
                                 </a>
                                 <div class="media-body">
-                                    <h4 class="media-heading">Tirth Patel</h4>
+                                    <h4 class="media-heading">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</h4>
                                     <div class="col-12 px-0 d-flex">
                                         <!-- Button to trigger the file input -->
                                         <a href="javascript:void(0);" class="btn btn-sm btn-primary mr-25" onclick="document.getElementById('photo-upload').click();">Upload New Photo</a>
@@ -31,58 +34,64 @@
                                         <a href="javascript:void(0);" class="btn btn-sm btn-warning" onclick="resetAvatar();">Remove Avatar</a>
                                     </div>
                                     <!-- Hidden file input -->
-                                    <input type="file" id="photo-upload" style="display:none" accept="image/*" onchange="previewAvatar(event)">
+                                    <form action="{{ route('profile.avatar.update') }}" method="POST" enctype="multipart/form-data">
+                                        @csrf
+                                        <input type="file" id="photo-upload" name="avatar" style="display:none" accept="image/*" onchange="previewAvatar(event)">
+                                        <button type="submit" id="avatar-submit" style="display:none;"></button>
+                                    </form>
                                 </div>
                             </div>
                             <!-- users edit media object ends -->
 
                             <!-- users edit account form start -->
-                            <form novalidate>
+                            <form action="{{ route('profile.update') }}" method="POST">
+                                @csrf
+                                @method('PUT')
                                 <div class="row">
                                     <!-- Basic Information -->
                                     <div class="col-12 col-sm-6">
                                         <div class="form-group">
                                             <div class="controls">
                                                 <label>First Name</label>
-                                                <input type="text" class="form-control" placeholder="First Name" value="Tirth" required>
+                                                <input type="text" class="form-control" name="first_name" placeholder="First Name" value="{{ auth()->user()->first_name }}" required>
                                             </div>
                                         </div>
                                         <div class="form-group">
                                             <div class="controls">
                                                 <label>Last Name</label>
-                                                <input type="text" class="form-control" placeholder="Last Name" value="Patel" required>
+                                                <input type="text" class="form-control" name="last_name" placeholder="Last Name" value="{{ auth()->user()->last_name }}" required>
                                             </div>
                                         </div>
                                         <div class="form-group">
                                             <label>Gender</label>
-                                            <select class="form-control" required>
-                                                <option value="male" selected>Male</option>
-                                                <option value="female">Female</option>
-                                                <option value="other">Other</option>
+                                            <select class="form-control" name="gender" required>
+                                                <option value="male" {{ auth()->user()->gender == 'male' ? 'selected' : '' }}>Male</option>
+                                                <option value="female" {{ auth()->user()->gender == 'female' ? 'selected' : '' }}>Female</option>
+                                                <option value="other" {{ auth()->user()->gender == 'other' ? 'selected' : '' }}>Other</option>
                                             </select>
                                         </div>
                                         <div class="form-group">
                                             <div class="controls">
                                                 <label>Phone</label>
-                                                <input type="text" class="form-control" placeholder="Phone Number" value="1234567890" required>
+                                                <input type="text" class="form-control" name="phone" placeholder="Phone Number" value="{{ auth()->user()->phone }}" required>
                                             </div>
                                         </div>
                                         <div class="form-group">
                                             <div class="controls">
                                                 <label>Email</label>
-                                                <input type="email" class="form-control" placeholder="Email" value="tirthpatel@gmail.com" required>
+                                                <input type="email" class="form-control" name="email" placeholder="Email" value="{{ auth()->user()->email }}" required>
                                             </div>
                                         </div>
                                         <div class="form-group">
                                             <div class="controls">
                                                 <label>PAN No</label>
-                                                <input type="text" class="form-control" placeholder="PAN Number" value="ABCDE1234F" required>
+                                                <input type="text" class="form-control" name="pan_no" placeholder="PAN Number" value="{{ auth()->user()->pan_no }}" required>
                                             </div>
                                         </div>
                                         <div class="form-group">
                                             <div class="controls">
                                                 <label>Birthdate</label>
-                                                <input type="text" class="form-control" placeholder="Birthdate" value="5-1-2005" required>
+                                                <input type="date" class="form-control" name="birthdate" value="{{ auth()->user()->birthdate }}" required>
                                             </div>
                                         </div>
                                     </div>
@@ -108,35 +117,35 @@
 </div>
 <!-- END: Content-->
 <script>
-    // Store the default avatar URL in a constant
-    const DEFAULT_AVATAR = "../../../app-assets/images/portrait/small/avatar-s-26.png";
-
-    // Load avatar from localStorage on page load
-    document.addEventListener("DOMContentLoaded", () => {
-        const savedAvatar = localStorage.getItem("userAvatar");
-        const avatar = document.getElementById("user-avatar");
-        avatar.src = savedAvatar || DEFAULT_AVATAR; // Set to saved avatar or default
-    });
-
-    // Preview avatar image when the user selects a new image
     function previewAvatar(event) {
         const avatar = document.getElementById('user-avatar');
         const file = event.target.files[0];
         const reader = new FileReader();
 
         reader.onload = function(e) {
-            avatar.src = e.target.result; // Update avatar with the selected image
-            localStorage.setItem("userAvatar", e.target.result); // Save avatar in localStorage
+            avatar.src = e.target.result; // Update avatar preview
+            document.getElementById('avatar-submit').click(); // Auto-submit form
         };
         reader.readAsDataURL(file);
     }
 
-    // Reset avatar to default image
     function resetAvatar() {
-        const avatar = document.getElementById('user-avatar');
-        avatar.src = DEFAULT_AVATAR; // Set to default avatar
-        localStorage.removeItem("userAvatar"); // Remove saved avatar from localStorage
+    if (confirm("Are you sure you want to remove your avatar?")) {
+        fetch("{{ route('profile.avatar.remove') }}", {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                "Content-Type": "application/json"
+            }
+        }).then(response => {
+            if (response.ok) {
+                document.getElementById('user-avatar').src = "{{ asset('app-assets/images/portrait/small/avatar-s-26.png') }}";
+            }
+        });
     }
+}
+
+
 </script>
 
 @endsection
