@@ -22,6 +22,22 @@
                 <form class="form" id="sale-fund-form" novalidate>
                     @csrf <!-- CSRF token added here -->
                     <div class="form-body">
+                        <!-- Portfolio -->
+                        <div class="form-group">
+                            <label for="portfolio">Portfolio</label>
+                            <div class="position-relative">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text"><i class="fa fa-briefcase"></i></div>
+                                    </div>
+                                    <select id="portfolio" class="form-control pl-5" name="portfolio_id" required>
+                                        <option value="" disabled selected>Select Portfolio</option>
+                                        <!-- Select2 will populate the options dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+                            <small class="text-danger" id="portfolio-error"></small>
+                        </div>
                         <!-- Fund Name -->
                         <div class="form-group">
                             <label for="fundname">Fund Name</label>
@@ -147,6 +163,26 @@
             cache: true
         }
     });
+      // Portfolio select2 initialization
+      $('#portfolio').select2({
+        placeholder: 'Select Portfolio',
+        ajax: {
+            url: '/get-portfolios',  // URL to the controller method
+            dataType: 'json',
+            delay: 250,  // Delay in ms to wait for input
+            data: function (params) {
+                return {
+                    search: params.term  // Send the search term to the backend
+                };
+            },
+            processResults: function (data) {
+                // Map the result into the format Select2 expects
+                return {
+                    results: data.results
+                };
+            }
+        }
+    });
 
         // Auto-fill price per unit when date or fund changes
         $('#date, #fundname').on('change', function() {
@@ -205,6 +241,7 @@
             e.preventDefault();
             var formData = {
                 _token: '{{ csrf_token() }}',
+                portfolio_id: $('#portfolio').val(),
                 fundname_id: $('#fundname').val(),
                 date: $('#date').val(),
                 totalprice: $('#totalprice').val(),

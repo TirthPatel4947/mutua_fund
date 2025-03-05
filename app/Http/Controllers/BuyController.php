@@ -94,6 +94,8 @@ class BuyController
         }
     }
     
+    
+    
    // Fetch portfolios dynamically for select2 dropdown (User-specific portfolios)
 public function getPortfolios(Request $request)
 {

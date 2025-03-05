@@ -98,7 +98,7 @@ Route::group(['middleware' => ['UserAccess']], function () {
     Route::get('/sell/funds/search', [SaleController::class, 'getFunds'])->name('sell.funds.search');
     Route::get('/sale/get-nav-price', [SaleController::class, 'getNavPrice'])->name('sale.getNavPrice');
     Route::post('/sale/store', [SaleController::class, 'store'])->name('sale.store'); // Save Sale Data
-
+    Route::get('/get-portfolios', [SaleController::class, 'getPortfolios']);
 
     //portfolio
     // Route to display user's portfolios
