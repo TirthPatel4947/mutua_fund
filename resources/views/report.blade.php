@@ -1,24 +1,33 @@
 @extends('common_template')
 @section('content')
 <title>Buy/Sale Report</title>
-
 <div class="content-body">
-    <div class="card shadow-sm mb-3">
+    <div class="card mb-3"> <!-- Removed shadow-sm -->
         <div class="card-body">
             <div class="row">
-                <div class="col-md-8">
-                    <div class="d-flex align-items-center" style="padding: 10px; background-color: #f9f9f9; border-radius: 10px; gap: 30px;">
-                        <div class="d-flex flex-column">
+                <div class="col-md-12">
+                    <div class="row" style="padding: 10px;">
+                        <div class="col-md-4">
+                            <label for="portfolioSelect" class="font-weight-bold">Select Portfolio</label>
+                            <select class="form-control form-control-lg" id="portfolioSelect">
+                                <option value="">All Portfolios</option>
+                                @foreach($portfolios as $portfolio)
+                                <option value="{{ $portfolio->id }}">{{ $portfolio->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
                             <label for="actionSelect" class="font-weight-bold">Select Action</label>
-                            <select class="form-control" id="actionSelect" style="max-width: 150px;" onchange="showReport()">
+                            <select class="form-control form-control-lg" id="actionSelect" onchange="showReport()">
                                 <option value="buy" selected>Purchase</option>
                                 <option value="sell">Redemption</option>
                             </select>
                         </div>
-                        <div class="d-flex flex-column">
+                        <div class="col-md-4">
                             <label for="dateRangeFilter" class="font-weight-bold">Select Date Range:</label>
-                            <input type="text" class="form-control" id="dateRangeFilter" placeholder="Select date range" readonly style="max-width: 200px;">
+                            <input type="text" class="form-control form-control-lg" id="dateRangeFilter" placeholder="Select date range" readonly style="background-color: #fff; color: #000; border: 1px solid #ccc;">
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -29,7 +38,7 @@
                 <table class="table table-bordered table-striped" id="buyTable" style="width: 100%;">
                     <thead>
                         <tr>
-                            <th>portfolio name</th>
+                            <th>Portfolio Name</th>
                             <th>Fund Name</th>
                             <th>Buying Date</th>
                             <th>Quantity of Shares</th>
@@ -41,13 +50,13 @@
                 </table>
             </div>
 
-            <!-- Sell Report Table (Compact Version) -->
+            <!-- Sell Report Table -->
             <div id="sellReport" class="report-section mt-4 d-none">
                 <h3 class="text-center text-white bg-info py-2 rounded-top font-weight-bold">Sell Report</h3>
                 <table class="table table-sm table-bordered table-striped" id="sellTable" style="width: 100%; font-size: 0.9em;">
                     <thead>
                         <tr>
-                            <th>portfolio name</th>
+                            <th>Portfolio Name</th>
                             <th>Fund Name</th>
                             <th>Selling Date</th>
                             <th>Quantity of Shares</th>
@@ -63,115 +72,166 @@
 </div>
 @endsection
 
+
 @section('scripts')
 <script>
     $(document).ready(function() {
+        // Function to compute the appropriate empty table message
+        function getEmptyTableMessage() {
+            var dateRange = $('#dateRangeFilter').val();
+            var portfolioId = $('#portfolioSelect').val();
+            if (dateRange && !portfolioId) {
+                return "No data available for the selected date range.";
+            } else if (!dateRange && portfolioId) {
+                return "No data available for the selected portfolio.";
+            } else if (dateRange && portfolioId) {
+                return "No data available for the selected date range and portfolio.";
+            } else {
+                return "No data available.";
+            }
+        }
+
         // Initialize Buy Report Table
-        var buyTable = $('#buyTable').DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: '{{ route("report.buy") }}',
-                data: function(d) {
-                    d.date_range = $('#dateRangeFilter').val();
-                }
-            },
-            columns: [   
-                {
-                    data: 'name',
-                    name: ' name'
+        function initializeBuyTable() {
+            return $('#buyTable').DataTable({
+                destroy: true, // Destroy existing instance before reloading
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '{{ route("report.buy") }}',
+                    data: function(d) {
+                        d.date_range = $('#dateRangeFilter').val();
+                        d.portfolio_id = $('#portfolioSelect').val(); // Pass selected portfolio
+                    }
                 },
-                {
-                    data: 'fund_name',
-                    name: 'fund_name'
+                columns: [{
+                        data: 'name',
+                        name: 'name'
+                    },
+                    {
+                        data: 'fund_name',
+                        name: 'fund_name'
+                    },
+                    {
+                        data: 'buying_date',
+                        name: 'buying_date'
+                    },
+                    {
+                        data: 'quantity_of_shares',
+                        name: 'quantity_of_shares'
+                    },
+                    {
+                        data: 'price_per_unit',
+                        name: 'price_per_unit'
+                    },
+                    {
+                        data: 'total_price',
+                        name: 'total_price'
+                    },
+                    {
+                        data: 'id',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false,
+                        render: function(data) {
+                            return `
+                            <button class="btn btn-sm btn-primary edit-btn" data-id="${data}">Edit</button>
+                            <button class="btn btn-sm btn-danger delete-btn" data-id="${data}">Delete</button>
+                        `;
+                        }
+                    }
+                ],
+                language: {
+                    emptyTable: getEmptyTableMessage()
                 },
-                {
-                    data: 'buying_date',
-                    name: 'buying_date'
-                },
-                {
-                    data: 'quantity_of_shares',
-                    name: 'quantity_of_shares'
-                },
-                {
-                    data: 'price_per_unit',
-                    name: 'price_per_unit'
-                },
-                {
-                    data: 'total_price',
-                    name: 'total_price'
-                },
-                {
-                    data: 'id',
-                    name: 'action',
-                    orderable: false,
-                    searchable: false,
-                    render: function(data) {
-                        return `
-                        <button class="btn btn-sm btn-primary edit-btn" data-id="${data}">Edit</button>
-                        <button class="btn btn-sm btn-danger delete-btn" data-id="${data}">Delete</button>
-                    `;
+                drawCallback: function(settings) {
+                    var api = this.api();
+                    if (api.rows({
+                            filter: 'applied'
+                        }).count() === 0) {
+                        $('#buyTable tbody').html('<tr><td colspan="7" class="text-center">' + getEmptyTableMessage() + '</td></tr>');
                     }
                 }
-            ],
-            language: {
-                emptyTable: "No data available for the selected date range."
-            }
-        });
+            });
+        }
 
-        // Initialize Sell Report Table
-        var sellTable = $('#sellTable').DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: '{{ route("report.sell") }}',
-                data: function(d) {
-                    d.date_range = $('#dateRangeFilter').val();
-                }
-            },
-            columns: [
-                 {
-                    data: 'name',
-                    name: ' name'
-                },{
-                    data: 'fund_name',
-                    name: 'fund_name'
+        // Initialize Sell Report Table using your sale data method
+        function initializeSellTable() {
+            return $('#sellTable').DataTable({
+                destroy: true, // Destroy existing instance before reloading
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '{{ route("report.sell") }}',
+                    data: function(d) {
+                        d.date_range = $('#dateRangeFilter').val();
+                        d.portfolio_id = $('#portfolioSelect').val(); // Pass selected portfolio
+                    }
                 },
-                {
-                    data: 'selling_date',
-                    name: 'selling_date'
+                columns: [{
+                        data: 'name',
+                        name: 'name'
+                    },
+                    {
+                        data: 'fund_name',
+                        name: 'fund_name'
+                    },
+                    {
+                        data: 'selling_date',
+                        name: 'selling_date'
+                    },
+                    {
+                        data: 'quantity_of_shares',
+                        name: 'quantity_of_shares'
+                    },
+                    {
+                        data: 'price_per_unit',
+                        name: 'price_per_unit'
+                    },
+                    {
+                        data: 'total_price',
+                        name: 'total_price'
+                    },
+                    {
+                        data: 'id',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false,
+                        render: function(data) {
+                            return `
+                            <button class="btn btn-sm btn-primary edit-btn" data-id="${data}">Edit</button>
+                            <button class="btn btn-sm btn-danger delete-btn" data-id="${data}">Delete</button>
+                        `;
+                        }
+                    }
+                ],
+                language: {
+                    emptyTable: getEmptyTableMessage()
                 },
-                {
-                    data: 'quantity_of_shares',
-                    name: 'quantity_of_shares'
-                },
-                {
-                    data: 'price_per_unit',
-                    name: 'price_per_unit'
-                },
-                {
-                    data: 'total_price',
-                    name: 'total_price'
-                },
-                {
-                    data: 'id',
-                    name: 'action',
-                    orderable: false,
-                    searchable: false,
-                    render: function(data) {
-                        return `
-                        <button class="btn btn-sm btn-primary edit-btn" data-id="${data}">Edit</button>
-                        <button class="btn btn-sm btn-danger delete-btn" data-id="${data}">Delete</button>
-                    `;
+                drawCallback: function(settings) {
+                    var api = this.api();
+                    if (api.rows({
+                            filter: 'applied'
+                        }).count() === 0) {
+                        $('#sellTable tbody').html('<tr><td colspan="7" class="text-center">' + getEmptyTableMessage() + '</td></tr>');
                     }
                 }
-            ],
-            language: {
-                emptyTable: "No data available for the selected date range."
-            }
+            });
+        }
+
+        // Initialize both tables on page load
+        var buyTable = initializeBuyTable();
+        var sellTable = initializeSellTable();
+
+        // Reload tables when portfolio selection changes
+        $('#portfolioSelect').on('change', function() {
+            buyTable.destroy();
+            sellTable.destroy();
+            buyTable = initializeBuyTable();
+            sellTable = initializeSellTable();
         });
 
-        // Initialize Date Range Picker
+        // Handle Date Range Filter
         $('#dateRangeFilter').daterangepicker({
             autoUpdateInput: false,
             locale: {
@@ -185,7 +245,7 @@
             sellTable.ajax.reload();
         });
 
-        $('#dateRangeFilter').on('cancel.daterangepicker', function(ev, picker) {
+        $('#dateRangeFilter').on('cancel.daterangepicker', function() {
             $(this).val('');
             buyTable.ajax.reload();
             sellTable.ajax.reload();
@@ -224,24 +284,30 @@
                 });
             }
         });
-    });
 
-    // Function to toggle between Buy and Sell tables
-    function showReport() {
-        const action = document.getElementById('actionSelect').value;
-        const buySection = document.getElementById('buyReport');
-        const sellSection = document.getElementById('sellReport');
 
-        if (action === 'buy') {
-            buySection.classList.remove('d-none');
-            sellSection.classList.add('d-none');
-            $('#buyTable').DataTable().columns.adjust().draw();
-        } else {
-            sellSection.classList.remove('d-none');
-            buySection.classList.add('d-none');
-            $('#sellTable').DataTable().columns.adjust().draw();
+
+        // Toggle function for Buy vs. Sell views
+        function showReport() {
+            const action = $('#actionSelect').val();
+            const buySection = $('#buyReport');
+            const sellSection = $('#sellReport');
+            if (action === 'buy') {
+                buySection.removeClass('d-none');
+                sellSection.addClass('d-none');
+                // Optionally adjust columns in case of window resize changes
+                $('#buyTable').DataTable().columns.adjust().draw();
+            } else if (action === 'sell') {
+                sellSection.removeClass('d-none');
+                buySection.addClass('d-none');
+                $('#sellTable').DataTable().columns.adjust().draw();
+            }
         }
-    }
-</script>
 
+        // Attach the toggle function to the action select change event
+        $('#actionSelect').on('change', function() {
+            showReport();
+        });
+    });
+</script>
 @endsection

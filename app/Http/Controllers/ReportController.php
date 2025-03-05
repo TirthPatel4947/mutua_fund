@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Auth;
 use App\Models\mutual_nav_history;
 use App\Models\MutualFund_Master;
 use App\Models\ReportHistory;
@@ -10,14 +11,16 @@ use Yajra\DataTables\DataTables;
 use App\Models\Portfolio;
 class ReportController
 {
-    /**
-     * Display the report view.
-     */
+
+    
     public function index()
     {
-        return view('report');
+        $userId = Auth::id(); // Get the authenticated user ID
+        $portfolios = Portfolio::where('user_id', $userId)->get(); // Fetch portfolios for the logged-in user
+    
+        return view('report', compact('portfolios'));
     }
-
+    
     /**
      * Get Buy Reports (Yajra DataTables) with Date Range Filter
      */
@@ -26,9 +29,14 @@ class ReportController
         // Get the authenticated user ID
         $userId = auth()->id();
     
-        $buyReports = ReportHistory::with('fund')
+        $buyReports = ReportHistory::with('fund', 'portfolio')
             ->where('status', 1)
             ->where('user_id', $userId); // Filter by user_id
+    
+        // Apply portfolio filter if provided
+        if ($request->has('portfolio_id') && $request->portfolio_id) {
+            $buyReports->where('portfolio_id', $request->portfolio_id);
+        }
     
         // Apply date range filter if provided
         if ($request->has('date_range') && $request->date_range) {
@@ -39,26 +47,27 @@ class ReportController
         }
     
         return DataTables::of($buyReports)
-        ->addColumn('name', function ($report) {
-            return optional($report->portfolio)->name ?? 'N/A';
-        })
-        ->addColumn('fund_name', function ($report) {
-            return optional($report->fund)->fundname ?? 'N/A';
-        })
-        ->addColumn('buying_date', function ($report) {
-            return \Carbon\Carbon::parse($report->date)->format('Y-m-d');
-        })
-        ->addColumn('quantity_of_shares', function ($report) {
-            return $report->unit;
-        })
-        ->addColumn('price_per_unit', function ($report) {
-            return '₹' . number_format($report->price / ($report->unit ?: 1), 2);
-        })
-        ->addColumn('total_price', function ($report) {
-            return '₹' . number_format($report->price, 2);
-        })
-        ->make(true);
-    }    
+            ->addColumn('name', function ($report) {
+                return optional($report->portfolio)->name ?? 'N/A';
+            })
+            ->addColumn('fund_name', function ($report) {
+                return optional($report->fund)->fundname ?? 'N/A';
+            })
+            ->addColumn('buying_date', function ($report) {
+                return \Carbon\Carbon::parse($report->date)->format('Y-m-d');
+            })
+            ->addColumn('quantity_of_shares', function ($report) {
+                return $report->unit;
+            })
+            ->addColumn('price_per_unit', function ($report) {
+                return '₹' . number_format($report->price / ($report->unit ?: 1), 2);
+            })
+            ->addColumn('total_price', function ($report) {
+                return '₹' . number_format($report->price, 2);
+            })
+            ->make(true);
+    }
+    
     /**
      * Get Sell Reports (Yajra DataTables) with Date Range Filter
      */
@@ -67,9 +76,14 @@ class ReportController
         // Get the authenticated user ID
         $userId = auth()->id();
     
-        $sellReports = ReportHistory::with('fund')
+        $sellReports = ReportHistory::with('fund', 'portfolio')
             ->where('status', 0)
             ->where('user_id', $userId); // Filter by user_id
+    
+        // Apply portfolio filter if provided
+        if ($request->has('portfolio_id') && $request->portfolio_id) {
+            $sellReports->where('portfolio_id', $request->portfolio_id);
+        }
     
         // Apply date range filter if provided
         if ($request->has('date_range') && $request->date_range) {
@@ -80,9 +94,9 @@ class ReportController
         }
     
         return DataTables::of($sellReports)
-         ->addColumn('name', function ($report) {
-            return optional($report->portfolio)->name ?? 'N/A';
-        })
+            ->addColumn('name', function ($report) {
+                return optional($report->portfolio)->name ?? 'N/A';
+            })
             ->addColumn('fund_name', function ($report) {
                 return optional($report->fund)->fundname ?? 'N/A';
             })
@@ -100,6 +114,7 @@ class ReportController
             })
             ->make(true);
     }
+    
     
 
 
@@ -268,9 +283,6 @@ class ReportController
         return response()->json(['error' => 'Failed to update the sale record. Error: ' . $e->getMessage()], 500);
     }
 }
-
-    
-    
 
     
 }

@@ -31,14 +31,14 @@
                                         <div class="input-group-text"><i class="fa fa-briefcase"></i></div>
                                     </div>
                                     <select id="portfolio" class="form-control pl-5" name="portfolio_id" required>
-    <option value="" disabled {{ !isset($buyData) || !$buyData->portfolio_id ? 'selected' : '' }}>Select Portfolio</option>
-    @foreach($portfolios as $portfolio)
-        <option value="{{ $portfolio->id }}"
-            {{ isset($buyData) && $buyData->portfolio_id == $portfolio->id ? 'selected' : '' }}>
-            {{ $portfolio->name }}
-        </option>
-    @endforeach
-</select>
+                                        <option value="" disabled {{ !isset($buyData) || !$buyData->portfolio_id ? 'selected' : '' }}>Select Portfolio</option>
+                                        @foreach($portfolios as $portfolio)
+                                        <option value="{{ $portfolio->id }}"
+                                            {{ isset($buyData) && $buyData->portfolio_id == $portfolio->id ? 'selected' : '' }}>
+                                            {{ $portfolio->name }}
+                                        </option>
+                                        @endforeach
+                                    </select>
 
 
                                 </div>
@@ -53,7 +53,7 @@
                                 <div class="input-group">
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="feather icon-briefcase"></i></div>
-                                       </div>
+                                    </div>
                                     <select id="fundname" class="form-control select2" name="fundname_id" required>
                                         <option value="">Select Fund</option>
                                         @foreach($funds as $fund)
