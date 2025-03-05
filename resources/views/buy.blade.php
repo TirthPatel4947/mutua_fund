@@ -30,10 +30,17 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="fa fa-briefcase"></i></div>
                                     </div>
-                                    <select id="portfolio" class="form-control pl-5" name="portfolio_id"   value="{{ old('portfolio_name', $buyData->portfolio->name ?? 'N/A') }}" required>
-                                        <option value="" disabled selected>Select Portfolio</option>
-                                        <!-- Select2 will populate the options dynamically -->
-                                    </select>
+                                    <select id="portfolio" class="form-control pl-5" name="portfolio_id" required>
+    <option value="" disabled {{ !isset($buyData) || !$buyData->portfolio_id ? 'selected' : '' }}>Select Portfolio</option>
+    @foreach($portfolios as $portfolio)
+        <option value="{{ $portfolio->id }}"
+            {{ isset($buyData) && $buyData->portfolio_id == $portfolio->id ? 'selected' : '' }}>
+            {{ $portfolio->name }}
+        </option>
+    @endforeach
+</select>
+
+
                                 </div>
                             </div>
                             <small class="text-danger" id="portfolio-error"></small>
@@ -46,7 +53,7 @@
                                 <div class="input-group">
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="feather icon-briefcase"></i></div>
-                                    </div>
+                                       </div>
                                     <select id="fundname" class="form-control select2" name="fundname_id" required>
                                         <option value="">Select Fund</option>
                                         @foreach($funds as $fund)
@@ -82,7 +89,7 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="fa fa-dollar-sign"></i></div>
                                     </div>
-                                    <input type="text" id="price_per_unit" class="form-control pl-5" placeholder="Price per unit" name="price_per_unit"  value="{{ old('price_per_unit', isset($buyData) ? $buyData->price / ($buyData->unit ?: 1) : '') }}" required>
+                                    <input type="text" id="price_per_unit" class="form-control pl-5" placeholder="Price per unit" name="price_per_unit" value="{{ old('price_per_unit', isset($buyData) ? $buyData->price / ($buyData->unit ?: 1) : '') }}" required>
                                 </div>
                             </div>
                             <small class="text-danger" id="price_per_unit-error"></small>
@@ -143,120 +150,128 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
 <script>
- $(document).ready(function() {
-    // Initialize select2 for fund selection
-    $('#fundname').select2({
-        placeholder: "Search and select a fund",
-        allowClear: true,
-        minimumInputLength: 1,
-        ajax: {
-            url: "{{ route('buy.funds.search') }}",
-            dataType: 'json',
-            delay: 250,
-            data: function(params) {
-                return { search: params.term };
-            },
-            processResults: function(data) {
-                return { results: data.results }; // Correctly process response
-            },
-            cache: true
-        }
-    });
-
-    // Portfolio select2 initialization
-    $('#portfolio').select2({
-        placeholder: 'Select Portfolio',
-        ajax: {
-            url: '/get-portfolios',  // URL to the controller method
-            dataType: 'json',
-            delay: 250,  // Delay in ms to wait for input
-            data: function (params) {
-                return {
-                    search: params.term  // Send the search term to the backend
-                };
-            },
-            processResults: function (data) {
-                // Map the result into the format Select2 expects
-                return {
-                    results: data.results
-                };
-            }
-        }
-    });
-
-    // Auto-fill price per unit when date or fund changes
-    $('#date, #fundname').on('change', function() {
-        autoFillPricePerUnit();
-    });
-
-    function autoFillPricePerUnit() {
-        var date = $('#date').val();
-        var fundId = $('#fundname').val();
-        if (fundId && date) {
-            $.ajax({
-                url: "{{ route('buy.getNavPrice') }}",
-                method: "GET",
-                data: { fund_id: fundId, date: date },
-                success: function(response) {
-                    if (response.nav_price) {
-                        $('#price_per_unit').val(parseFloat(response.nav_price).toFixed(2));
-                    } else {
-                        $('#price_per_unit').val('NAV not found');
-                        alert('NAV not found for the selected date.');
-                    }
-                }
-            });
-        }
-    }
-
-    // Auto calculation logic
-    $('#totalprice').on('input', function() {
-        calculateUnitsFromAmount();
-    });
-
-    $('#quantityofshare').on('input', function() {
-        calculateAmountFromUnits();
-    });
-
-    function calculateUnitsFromAmount() {
-        var investmentAmount = parseFloat($('#totalprice').val());
-        var pricePerUnit = parseFloat($('#price_per_unit').val());
-        if (!isNaN(investmentAmount) && !isNaN(pricePerUnit) && pricePerUnit > 0) {
-            $('#quantityofshare').val((investmentAmount / pricePerUnit).toFixed(2));
-        }
-    }
-
-    function calculateAmountFromUnits() {
-        var units = parseFloat($('#quantityofshare').val());
-        var pricePerUnit = parseFloat($('#price_per_unit').val());
-        if (!isNaN(units) && !isNaN(pricePerUnit) && pricePerUnit > 0) {
-            $('#totalprice').val((units * pricePerUnit).toFixed(2));
-        }
-    }
-
-    $('#save-btn').on('click', function(e) {
-        e.preventDefault();
-        var formData = {
-            _token: '{{ csrf_token() }}',
-            fundname_id: $('#fundname').val(),
-            date: $('#date').val(),
-            totalprice: $('#totalprice').val(),
-            quantityofshare: $('#quantityofshare').val(),
-            price_per_unit: $('#price_per_unit').val(),
-            portfolio_id: $('#portfolio').val()
-        };
-        $.ajax({
-            url: "{{ isset($buyData) ? route('report.update', $buyData->id) : route('buyFund.store') }}",
-            type: "{{ isset($buyData) ? 'PUT' : 'POST' }}",
-            data: formData,
-            success: function(response) {
-                alert(response.message);
-                window.location.href = "{{ route('dashboard') }}";
-            },
-            error: function() {
-                alert("Failed to save the form data. Please try again.");
+    $(document).ready(function() {
+        // Initialize select2 for fund selection
+        $('#fundname').select2({
+            placeholder: "Search and select a fund",
+            allowClear: true,
+            minimumInputLength: 1,
+            ajax: {
+                url: "{{ route('buy.funds.search') }}",
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        search: params.term
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.results
+                    }; // Correctly process response
+                },
+                cache: true
             }
         });
+
+        // Portfolio select2 initialization
+        $('#portfolio').select2({
+            placeholder: 'Select Portfolio',
+            ajax: {
+                url: '/get-portfolios', // URL to the controller method
+                dataType: 'json',
+                delay: 250, // Delay in ms to wait for input
+                data: function(params) {
+                    return {
+                        search: params.term // Send the search term to the backend
+                    };
+                },
+                processResults: function(data) {
+                    // Map the result into the format Select2 expects
+                    return {
+                        results: data.results
+                    };
+                }
+            }
+        });
+
+        // Auto-fill price per unit when date or fund changes
+        $('#date, #fundname').on('change', function() {
+            autoFillPricePerUnit();
+        });
+
+        function autoFillPricePerUnit() {
+            var date = $('#date').val();
+            var fundId = $('#fundname').val();
+            if (fundId && date) {
+                $.ajax({
+                    url: "{{ route('buy.getNavPrice') }}",
+                    method: "GET",
+                    data: {
+                        fund_id: fundId,
+                        date: date
+                    },
+                    success: function(response) {
+                        if (response.nav_price) {
+                            $('#price_per_unit').val(parseFloat(response.nav_price).toFixed(2));
+                        } else {
+                            $('#price_per_unit').val('NAV not found');
+                            alert('NAV not found for the selected date.');
+                        }
+                    }
+                });
+            }
+        }
+
+        // Auto calculation logic
+        $('#totalprice').on('input', function() {
+            calculateUnitsFromAmount();
+        });
+
+        $('#quantityofshare').on('input', function() {
+            calculateAmountFromUnits();
+        });
+
+        function calculateUnitsFromAmount() {
+            var investmentAmount = parseFloat($('#totalprice').val());
+            var pricePerUnit = parseFloat($('#price_per_unit').val());
+            if (!isNaN(investmentAmount) && !isNaN(pricePerUnit) && pricePerUnit > 0) {
+                $('#quantityofshare').val((investmentAmount / pricePerUnit).toFixed(2));
+            }
+        }
+
+        function calculateAmountFromUnits() {
+            var units = parseFloat($('#quantityofshare').val());
+            var pricePerUnit = parseFloat($('#price_per_unit').val());
+            if (!isNaN(units) && !isNaN(pricePerUnit) && pricePerUnit > 0) {
+                $('#totalprice').val((units * pricePerUnit).toFixed(2));
+            }
+        }
+
+        $('#save-btn').on('click', function(e) {
+            e.preventDefault();
+            var formData = {
+                _token: '{{ csrf_token() }}',
+                portfolio_id: $('#portfolio_id').val(),
+                fundname_id: $('#fundname').val(),
+                date: $('#date').val(),
+                totalprice: $('#totalprice').val(),
+                quantityofshare: $('#quantityofshare').val(),
+                price_per_unit: $('#price_per_unit').val(),
+                portfolio_id: $('#portfolio').val()
+            };
+            $.ajax({
+                url: "{{ isset($buyData) ? route('report.update', $buyData->id) : route('buyFund.store') }}",
+                type: "{{ isset($buyData) ? 'PUT' : 'POST' }}",
+                data: formData,
+                success: function(response) {
+                    alert(response.message);
+                    window.location.href = "{{ route('dashboard') }}";
+                },
+                error: function() {
+                    alert("Failed to save the form data. Please try again.");
+                }
+            });
+        });
     });
-});
 </script>

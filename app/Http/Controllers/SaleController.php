@@ -13,10 +13,13 @@ class SaleController
 {
     public function index()
     {
-        $funds = Sale::all();
-        return view('sale', compact('funds'));
+        $user_id = auth()->id(); // Get authenticated user ID
+        $funds = Sale::all(); // Fetch all sales (assuming this holds sale records)
+        $portfolios = Portfolio::where('user_id', $user_id)->get(); // Fetch only user-specific portfolios
+    
+        return view('sale', compact('funds', 'portfolios')); // Pass portfolios to the view
     }
-
+    
     public function getFunds(Request $request)
     {
         $search = $request->input('search');

@@ -31,8 +31,13 @@
                                         <div class="input-group-text"><i class="fa fa-briefcase"></i></div>
                                     </div>
                                     <select id="portfolio" class="form-control pl-5" name="portfolio_id" required>
-                                        <option value="" disabled selected>Select Portfolio</option>
-                                        <!-- Select2 will populate the options dynamically -->
+                                        <option value="" disabled {{ !isset($saleData) || !$saleData->portfolio_id ? 'selected' : '' }}>Select Portfolio</option>
+                                        @foreach($portfolios as $portfolio)
+                                        <option value="{{ $portfolio->id }}"
+                                            {{ isset($saleData) && $saleData->portfolio_id == $portfolio->id ? 'selected' : '' }}>
+                                            {{ $portfolio->name }}
+                                        </option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -139,7 +144,6 @@
 <div class="drag-target"></div>
 
 @endsection
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 

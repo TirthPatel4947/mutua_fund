@@ -15,10 +15,13 @@ class BuyController
     // Display the buy form
     public function index()
     {
-        $funds = MutualFund_Master::all(); // Fetch available funds
-        return view('buy', compact('funds')); // Pass funds to the view
+        $user_id = auth()->id();
+        $funds = MutualFund_Master::all();
+        $portfolios = Portfolio::where('user_id', $user_id)->get(); // Fetch user-specific portfolios
+    
+        return view('buy', compact('funds', 'portfolios')); // Pass portfolios to the view
     }
-
+    
     // Fetch funds dynamically for select2 dropdown
     public function getFunds(Request $request)
     {
