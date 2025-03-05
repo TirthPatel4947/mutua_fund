@@ -25,7 +25,9 @@
                         </div>
                         <div class="col-md-4">
                             <label for="dateRangeFilter" class="font-weight-bold">Select Date Range:</label>
-                            <input type="text" class="form-control form-control-lg" id="dateRangeFilter" placeholder="Select date range" readonly style="background-color: #fff; color: #000; border: 1px solid #ccc;">
+                            <input type="text" class="form-control form-control-lg" id="dateRangeFilter"
+                                placeholder="Select Date Range" readonly
+                                style="background-color: #fff; color: #000; border: 1px solid #ccc; font-weight: 700;">
                         </div>
 
                     </div>
@@ -310,4 +312,12 @@
         });
     });
 </script>
+<style>
+    #dateRangeFilter::placeholder {
+    font-weight: 380; /* Extra Bold */
+    color: #000; /* Dark Black */
+    opacity: 1; /* Ensure full visibility */
+}
+
+</style>
 @endsection
