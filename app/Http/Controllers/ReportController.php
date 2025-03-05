@@ -39,24 +39,26 @@ class ReportController
         }
     
         return DataTables::of($buyReports)
-            ->addColumn('fund_name', function ($report) {
-                return optional($report->fund)->fundname ?? 'N/A';
-            })
-            ->addColumn('buying_date', function ($report) {
-                return \Carbon\Carbon::parse($report->date)->format('Y-m-d');
-            })
-            ->addColumn('quantity_of_shares', function ($report) {
-                return $report->unit;
-            })
-            ->addColumn('price_per_unit', function ($report) {
-                return '₹' . number_format($report->price / ($report->unit ?: 1), 2);
-            })
-            ->addColumn('total_price', function ($report) {
-                return '₹' . number_format($report->price, 2);
-            })
-            ->make(true);
-    }
-    
+        ->addColumn('name', function ($report) {
+            return optional($report->portfolio)->name ?? 'N/A';
+        })
+        ->addColumn('fund_name', function ($report) {
+            return optional($report->fund)->fundname ?? 'N/A';
+        })
+        ->addColumn('buying_date', function ($report) {
+            return \Carbon\Carbon::parse($report->date)->format('Y-m-d');
+        })
+        ->addColumn('quantity_of_shares', function ($report) {
+            return $report->unit;
+        })
+        ->addColumn('price_per_unit', function ($report) {
+            return '₹' . number_format($report->price / ($report->unit ?: 1), 2);
+        })
+        ->addColumn('total_price', function ($report) {
+            return '₹' . number_format($report->price, 2);
+        })
+        ->make(true);
+    }    
     /**
      * Get Sell Reports (Yajra DataTables) with Date Range Filter
      */
@@ -78,6 +80,9 @@ class ReportController
         }
     
         return DataTables::of($sellReports)
+         ->addColumn('name', function ($report) {
+            return optional($report->portfolio)->name ?? 'N/A';
+        })
             ->addColumn('fund_name', function ($report) {
                 return optional($report->fund)->fundname ?? 'N/A';
             })

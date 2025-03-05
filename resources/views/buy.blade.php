@@ -30,7 +30,7 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="fa fa-briefcase"></i></div>
                                     </div>
-                                    <select id="portfolio" class="form-control pl-5" name="portfolio_id" required>
+                                    <select id="portfolio" class="form-control pl-5" name="portfolio_id"   value="{{ old('portfolio_name', $buyData->portfolio->name ?? 'N/A') }}" required>
                                         <option value="" disabled selected>Select Portfolio</option>
                                         <!-- Select2 will populate the options dynamically -->
                                     </select>

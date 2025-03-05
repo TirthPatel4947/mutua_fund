@@ -29,6 +29,7 @@
                 <table class="table table-bordered table-striped" id="buyTable" style="width: 100%;">
                     <thead>
                         <tr>
+                            <th>portfolio name</th>
                             <th>Fund Name</th>
                             <th>Buying Date</th>
                             <th>Quantity of Shares</th>
@@ -46,6 +47,7 @@
                 <table class="table table-sm table-bordered table-striped" id="sellTable" style="width: 100%; font-size: 0.9em;">
                     <thead>
                         <tr>
+                            <th>portfolio name</th>
                             <th>Fund Name</th>
                             <th>Selling Date</th>
                             <th>Quantity of Shares</th>
@@ -74,7 +76,12 @@
                     d.date_range = $('#dateRangeFilter').val();
                 }
             },
-            columns: [{
+            columns: [   
+                {
+                    data: 'name',
+                    name: ' name'
+                },
+                {
                     data: 'fund_name',
                     name: 'fund_name'
                 },
@@ -122,7 +129,11 @@
                     d.date_range = $('#dateRangeFilter').val();
                 }
             },
-            columns: [{
+            columns: [
+                 {
+                    data: 'name',
+                    name: ' name'
+                },{
                     data: 'fund_name',
                     name: 'fund_name'
                 },
