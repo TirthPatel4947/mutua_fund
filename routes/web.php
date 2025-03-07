@@ -47,9 +47,9 @@ Route::group(['middleware' => ['UserAccess']], function () {
 
     // deshbord page
     Route::get('/dashboard', [DashboardController::class, 'showInvestmentAmount'])->name('dashboard');
-
     Route::get('/fund-details', [DashboardController::class, 'fundDetails'])->name('fund.details');
     Route::get('/get-investment-data', [DashboardController::class, 'getInvestmentData']);
+    Route::get('/fund-performance', [DashboardController::class, 'getFundPerformance'])->name('fund.performance');
 
     // edit account
     Route::get('/user', [profilecontroller::class, 'edit'])->name('user');
@@ -114,3 +114,7 @@ Route::group(['middleware' => ['UserAccess']], function () {
 Route::get('/mutual-fund-store', [MutualFundMasterController::class, 'fetch_fund'])->name('mutual-fund-store');
 // api for nav
 Route::get('fetch-nav', [navcontroller::class, 'nav']);
+
+
+
+

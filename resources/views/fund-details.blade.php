@@ -11,7 +11,20 @@
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
                 </a>
 
-                <h3 class="text-muted">Mutual Fund Details</h3>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="text-muted mb-0">Mutual Fund Details</h3>
+                    <div class="d-flex align-items-center">
+                        <label for="portfolioSelect" class="form-label me-2 mb-0">Select Portfolio:</label>
+                        <select id="portfolioSelect" class="form-select" style="width: 170px; height: 38px;">
+                            <option value="all">All Portfolios</option>
+                            @foreach($portfolios as $portfolio)
+                            <option value="{{ $portfolio->id }}">{{ $portfolio->name }}</option>
+                            @endforeach
+                        </select>
+
+                    </div>
+                </div>
+
 
                 <table class="table table-bordered text-center mt-3" id="fundDetailsTable">
                     <thead class="thead-light">
@@ -51,56 +64,56 @@
             }
         });
 
-        $('#fundDetailsTable').DataTable({
+        let table = $('#fundDetailsTable').DataTable({
             processing: true,
             serverSide: true,
-            ajax: "{{ route('fund.details') }}",
-            columns: [
-                { data: 'fund_name', name: 'fund_name', className: 'text-center' },
-
-                // Latest NAV with Date
+            language: {
+                emptyTable: "No data available in the selected portfolio"
+            },
+            ajax: {
+                url: "{{ route('fund.details') }}",
+                data: function(d) {
+                    d.portfolio_id = $('#portfolioSelect').val();
+                }
+            },
+            columns: [{
+                    data: 'fund_name',
+                    name: 'fund_name',
+                    className: 'text-center'
+                },
                 {
                     data: null,
                     name: 'last_nav',
                     className: 'text-center',
                     render: function(data, type, row) {
                         return row.current_nav +
-                            '<br><span style="font-size: 0.8em;">' +
-                            row.nav_date + '</span>';
+                            '<br><span style="font-size: 0.8em;">' + row.nav_date + '</span>';
                     }
                 },
-
-                // Combined Total Cost and Units
                 {
                     data: null,
                     name: 'total_cost_and_units',
                     className: 'text-center',
                     render: function(data, type, row) {
                         return row.total_investment +
-                            '<br><span style="font-size: 0.8em;">' +
-                            row.total_units + ' units</span>';
+                            '<br><span style="font-size: 0.8em;">' + row.total_units + ' units</span>';
                     }
                 },
-
-                { data: 'current_value', name: 'current_value', className: 'text-center' },
-
-                // Profit/Loss with Color Indication
+                {
+                    data: 'current_value',
+                    name: 'current_value',
+                    className: 'text-center'
+                },
                 {
                     data: 'absolute_profit_or_loss',
                     name: 'absolute_profit_or_loss',
                     className: 'text-center',
                     render: function(data, type, row) {
-                        if (row.profit_or_loss < 0) {
-                            return '<span class="text-danger">-' + data + '</span>';
-                        } else if (row.profit_or_loss > 0) {
-                            return '<span class="text-success">+' + data + '</span>';
-                        } else {
-                            return data;
-                        }
+                        return row.profit_or_loss < 0 ?
+                            '<span class="text-danger">' + data + '</span>' :
+                            '<span class="text-success">' + data + '</span>';
                     }
                 },
-
-                // Percentage Gain/Loss with Color Indication
                 {
                     data: 'percentage_gain',
                     name: 'percentage_gain',
@@ -108,17 +121,20 @@
                     orderable: false,
                     render: function(data, type, row) {
                         let value = parseFloat(data);
-                        if (value > 0) {
-                            return '<span class="text-success">+' + value.toFixed(2) + '%</span>';
-                        } else if (value < 0) {
-                            return '<span class="text-danger">' + value.toFixed(2) + '%</span>';
-                        } else {
-                            return value.toFixed(2) + '%';
-                        }
+                        return value > 0 ?
+                            '<span class="text-success">' + value.toFixed(2) + '%</span>' :
+                            '<span class="text-danger">' + value.toFixed(2) + '%</span>';
                     }
                 }
             ],
-            order: [[0, "asc"]]
+            order: [
+                [0, "asc"]
+            ]
+        });
+
+
+        $('#portfolioSelect').change(function() {
+            table.ajax.reload();
         });
     });
 </script>
@@ -126,24 +142,10 @@
 
 @section('styles')
 <style>
-    .custom-header {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        line-height: 1.1;
-    }
-
-    .custom-header .subtext {
-        font-size: 0.90em;
-        margin-top: -2px;
-    }
-
-    /* Table Header Styles */
     .table thead th {
         vertical-align: middle;
-        color: black;  /* Standard black color */
-        font-weight: normal;  /* No highlight */
+        color: black;
+        font-weight: normal;
     }
 </style>
 @endsection
