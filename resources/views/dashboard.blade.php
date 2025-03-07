@@ -106,7 +106,7 @@
 
         <div class="row match-height">
             <!-- Bar Chart: Mutual Fund Performance -->
-            <div class="col-xl-8 col-lg-12">
+            <div class="col-xl-12 col-lg-12">
                 <div class="card">
                     <div class="card-header">
                         <h4 class="card-title">Yearly Investment</h4>
@@ -121,162 +121,63 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Pie Chart: Investment Distribution -->
-            <div class="col-xl-4 col-lg-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h4 class="card-title">Investment Distribution</h4>
-                    </div>
-                    <div class="card-content">
-                        <div class="card-body">
-                            <canvas id="pieChart"></canvas> <!-- Canvas for Chart.js pie chart -->
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // Make an AJAX call to get the data
-                $.ajax({
-                    url: '/get-investment-data', // Replace with your actual endpoint
-                    type: 'GET',
-                    success: function(response) {
-                        // Access data from the response
-                        var years = response.years;
-                        var investmentValues = response.investmentValues;
-                        var fundNames = response.fundNames;
-                        var fundInvestments = response.fundInvestments;
+         document.addEventListener('DOMContentLoaded', function() {
+    $.ajax({
+        url: '/get-investment-data', // API Call to Fetch Data
+        type: 'GET',
+        success: function(response) {
+            console.log("Response Data:", response); // Debugging Log
 
-                        // Ensure non-empty arrays to avoid rendering issues
-                        if (years.length === 0) {
-                            years = ['No data available'];
-                            investmentValues = [0]; // Default value
-                        }
+            var years = response.years || [];
+            var investmentValues = response.investmentValues || [];
+            var salesValues = response.salesValues || [];
 
-                        if (fundNames.length === 0) {
-                            fundNames = ['No data available'];
-                            fundInvestments = [0]; // Default value
-                        }
+            console.log("Years:", years);
+            console.log("Investment Values:", investmentValues);
+            console.log("Sales Values:", salesValues);
 
-                        // Reverse the order of years and investmentValues to display most recent first
-                        const reversedYears = years.reverse();
-                        const reversedInvestmentValues = investmentValues.reverse().map(value => parseFloat(value).toFixed(3)); // Format to 3 decimal places
+            // Reverse data for proper chronological order
+            const reversedYears = [...years].reverse();
+            const reversedInvestmentValues = investmentValues.reverse().map(value => Number(value));
+            const reversedSalesValues = salesValues.reverse().map(value => Number(value));
 
-                        // Dynamically set the width of the bar chart based on the number of years
-                        const chartWidth = 200 * reversedYears.length;
+            document.getElementById('barChart').innerHTML = ""; // Ensure chart refresh
 
-                        // Set the width of the chart dynamically
-                        document.getElementById('barChart').style.width = `${chartWidth}px`;
-
-                        // Array of colors for the bars
-                        var barColors = [
-                            '#FF7043', '#29B6F6', '#FFCA28', '#8E44AD', '#4CAF50', '#FFEB3B', '#FF5722', '#00BCD4', '#673AB7', '#FFC107'
-                        ];
-
-                        // Bar Chart for Yearly Investment using ApexCharts
-                        var barOptions = {
-                            chart: {
-                                type: 'bar',
-                                height: 400,
-                                zoom: {
-                                    enabled: true,
-                                    type: 'xy', // Allow zooming in both x and y directions
-                                }
-                            },
-                            series: [{
-                                name: 'Investment Value (INR)',
-                                data: reversedInvestmentValues.map(value => parseFloat(value).toFixed(3)) // Ensure 3 decimal places for each value
-                            }],
-                            xaxis: {
-                                categories: reversedYears, // Display reversed years (most recent first)
-                                title: {
-                                    text: 'Years'
-                                }
-                            },
-                            yaxis: {
-                                title: {
-                                    text: 'Value (INR)'
-                                }
-                            },
-                            title: {
-                                text: 'Year-wise Investment Value',
-                                align: 'center'
-                            },
-                            // Set the colors of the bars
-                            colors: barColors.slice(0, reversedYears.length), // Slice the color array based on the number of years
-                            dataLabels: {
-                                enabled: true,
-                                formatter: function(val) {
-                                    return val.toFixed(2); // Format the value to two decimal places
-                                }
-                            },
-                        };
-
-                        // Render Bar Chart (ApexCharts)
-                        var barChart = new ApexCharts(document.querySelector("#barChart"), barOptions);
-                        barChart.render();
-
-                        // Pie Chart for Investment Distribution using Chart.js
-                        if (fundNames.length && fundInvestments.length) {
-                            var pieCtx = document.getElementById('pieChart').getContext('2d');
-                            var pieChart = new Chart(pieCtx, {
-                                type: 'pie',
-                                data: {
-                                    labels: fundNames,
-                                    datasets: [{
-                                        data: fundInvestments,
-                                        backgroundColor: ['#FF7043', '#29B6F6', '#FFCA28', '#8E44AD', '#4CAF50']
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    plugins: {
-                                        legend: {
-                                            display: true
-                                        },
-                                        title: {
-                                            display: true,
-                                            text: 'Investment Distribution by Fund'
-                                        },
-                                        // Add the datalabels plugin for displaying percentages on the chart
-                                        datalabels: {
-                                            formatter: function(value, ctx) {
-                                                var total = fundInvestments.reduce((a, b) => a + b, 0);
-                                                var percentage = (value / total) * 100;
-                                                return percentage.toFixed(2) + '%'; // Display percentage
-                                            },
-                                            color: '#fff', // Text color for the percentage labels
-                                            font: {
-                                                weight: 'bold',
-                                                size: 14
-                                            }
-                                        }
-                                    },
-                                    tooltips: {
-                                        callbacks: {
-                                            label: function(tooltipItem) {
-                                                var value = tooltipItem.raw;
-                                                var total = fundInvestments.reduce((a, b) => a + b, 0);
-                                                var percentage = (value / total) * 100;
-                                                return tooltipItem.label + ': ' + value.toFixed(2) + ' INR (' + percentage.toFixed(2) + '%)'; // Show value and percentage in tooltip
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-                        } else {
-                            console.error("Pie chart data is invalid or empty.");
-                        }
-
-                    },
-                    error: function(error) {
-                        console.error("Error fetching data:", error);
+            var options = {
+                chart: { type: 'bar', height: 400, stacked: false },
+                series: [
+                    { name: 'Investment (Buy) INR', data: reversedInvestmentValues },
+                    { name: 'Sales (Sell) INR', data: reversedSalesValues }
+                ],
+                xaxis: { categories: reversedYears, title: { text: 'Years' } },
+                yaxis: { title: { text: 'Value (INR)' }, labels: { formatter: val => val.toLocaleString() } },
+                colors: ['#4CAF50', '#FF7043'], // Green for Buy, Red for Sell
+                dataLabels: { enabled: true },
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '50%',
+                        dataLabels: { position: 'top' }
                     }
-                });
-            });
+                },
+                title: { text: 'Year-wise Investment & Sales', align: 'center' },
+                legend: { position: 'top' }
+            };
+
+            setTimeout(() => {
+                var chart = new ApexCharts(document.querySelector("#barChart"), options);
+                chart.render();
+                console.log("Chart Rendered!");
+            }, 500);
+        },
+        error: function(error) {
+            console.error("Error fetching data:", error);
+        }
+    });
+});
         </script>
 
         <!-- Custom CSS -->
