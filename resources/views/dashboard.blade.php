@@ -14,8 +14,8 @@
                             {{ Auth::user()->first_name . ' ' . Auth::user()->last_name ?? 'Guest' }}
                         </h1>
                     </div>
-             
-                
+
+
                     <div class="col-6 text-right">
                         <a href="{{ route('card') }}">
                             <button class="btn btn-danger rounded-pill px-4 py-1" style="font-size: 16px;">
@@ -124,60 +124,90 @@
         </div>
 
         <script>
-         document.addEventListener('DOMContentLoaded', function() {
-    $.ajax({
-        url: '/get-investment-data', // API Call to Fetch Data
-        type: 'GET',
-        success: function(response) {
-            console.log("Response Data:", response); // Debugging Log
+            document.addEventListener('DOMContentLoaded', function() {
+                $.ajax({
+                    url: '/get-investment-data', // API Call to Fetch Data
+                    type: 'GET',
+                    success: function(response) {
+                        console.log("Response Data:", response); // Debugging Log
 
-            var years = response.years || [];
-            var investmentValues = response.investmentValues || [];
-            var salesValues = response.salesValues || [];
+                        var years = response.years || [];
+                        var investmentValues = response.investmentValues || [];
+                        var salesValues = response.salesValues || [];
 
-            console.log("Years:", years);
-            console.log("Investment Values:", investmentValues);
-            console.log("Sales Values:", salesValues);
+                        console.log("Years:", years);
+                        console.log("Investment Values:", investmentValues);
+                        console.log("Sales Values:", salesValues);
 
-            // Reverse data for proper chronological order
-            const reversedYears = [...years].reverse();
-            const reversedInvestmentValues = investmentValues.reverse().map(value => Number(value));
-            const reversedSalesValues = salesValues.reverse().map(value => Number(value));
+                        // Reverse data for proper chronological order
+                        const reversedYears = [...years].reverse();
+                        const reversedInvestmentValues = investmentValues.reverse().map(value => Number(value));
+                        const reversedSalesValues = salesValues.reverse().map(value => Number(value));
 
-            document.getElementById('barChart').innerHTML = ""; // Ensure chart refresh
+                        document.getElementById('barChart').innerHTML = ""; // Ensure chart refresh
 
-            var options = {
-                chart: { type: 'bar', height: 400, stacked: false },
-                series: [
-                    { name: 'Investment (Buy) INR', data: reversedInvestmentValues },
-                    { name: 'Sales (Sell) INR', data: reversedSalesValues }
-                ],
-                xaxis: { categories: reversedYears, title: { text: 'Years' } },
-                yaxis: { title: { text: 'Value (INR)' }, labels: { formatter: val => val.toLocaleString() } },
-                colors: ['#4CAF50', '#FF7043'], // Green for Buy, Red for Sell
-                dataLabels: { enabled: true },
-                plotOptions: {
-                    bar: {
-                        horizontal: false,
-                        columnWidth: '50%',
-                        dataLabels: { position: 'top' }
+                        var options = {
+                            chart: {
+                                type: 'bar',
+                                height: 400,
+                                stacked: false
+                            },
+                            series: [{
+                                    name: 'Investment (Buy) INR',
+                                    data: reversedInvestmentValues
+                                },
+                                {
+                                    name: 'Sales (Sell) INR',
+                                    data: reversedSalesValues
+                                }
+                            ],
+                            xaxis: {
+                                categories: reversedYears,
+                                title: {
+                                    text: 'Years'
+                                }
+                            },
+                            yaxis: {
+                                title: {
+                                    text: 'Value (INR)'
+                                },
+                                labels: {
+                                    formatter: val => val.toLocaleString()
+                                }
+                            },
+                            colors: ['#4CAF50', '#FF7043'], // Green for Buy, Red for Sell
+                            dataLabels: {
+                                enabled: true
+                            },
+                            plotOptions: {
+                                bar: {
+                                    horizontal: false,
+                                    columnWidth: '50%',
+                                    dataLabels: {
+                                        position: 'top'
+                                    }
+                                }
+                            },
+                            title: {
+                                text: 'Year-wise Investment & Sales',
+                                align: 'center'
+                            },
+                            legend: {
+                                position: 'top'
+                            }
+                        };
+
+                        setTimeout(() => {
+                            var chart = new ApexCharts(document.querySelector("#barChart"), options);
+                            chart.render();
+                            console.log("Chart Rendered!");
+                        }, 500);
+                    },
+                    error: function(error) {
+                        console.error("Error fetching data:", error);
                     }
-                },
-                title: { text: 'Year-wise Investment & Sales', align: 'center' },
-                legend: { position: 'top' }
-            };
-
-            setTimeout(() => {
-                var chart = new ApexCharts(document.querySelector("#barChart"), options);
-                chart.render();
-                console.log("Chart Rendered!");
-            }, 500);
-        },
-        error: function(error) {
-            console.error("Error fetching data:", error);
-        }
-    });
-});
+                });
+            });
         </script>
 
         <!-- Custom CSS -->
@@ -390,111 +420,55 @@
 
 
         <!-- <!detials in table -->
-        <!-- Social & Weather -->
+        <!-- Mutual Fund Ads Section -->
         <div class="row match-height">
+            <!-- Zerodha Ad -->
             <div class="col-xl-4 col-lg-12">
                 <div class="card bg-gradient-x-danger">
                     <div class="card-content">
-                        <div class="card-body">
-                            <div class="animated-weather-icons text-center float-left">
-                                <svg version="1.1" id="cloudHailAlt2" class="climacon climacon_cloudHailAlt climacon-blue-grey climacon-darken-2 height-100" viewBox="15 15 70 70">
-                                    <g class="climacon_iconWrap climacon_iconWrap-cloudHailAlt">
-                                        <g class="climacon_wrapperComponent climacon_wrapperComponent-hailAlt">
-                                            <g class="climacon_component climacon_component-stroke climacon_component-stroke_hailAlt climacon_component-stroke_hailAlt-left">
-                                                <circle cx="42" cy="65.498" r="2"></circle>
-                                            </g>
-                                            <g class="climacon_component climacon_component-stroke climacon_component-stroke_hailAlt climacon_component-stroke_hailAlt-middle">
-                                                <circle cx="49.999" cy="65.498" r="2"></circle>
-                                            </g>
-                                            <g class="climacon_component climacon_component-stroke climacon_component-stroke_hailAlt climacon_component-stroke_hailAlt-right">
-                                                <circle cx="57.998" cy="65.498" r="2"></circle>
-                                            </g>
-                                            <g class="climacon_component climacon_component-stroke climacon_component-stroke_hailAlt climacon_component-stroke_hailAlt-left">
-                                                <circle cx="42" cy="65.498" r="2"></circle>
-                                            </g>
-                                            <g class="climacon_component climacon_component-stroke climacon_component-stroke_hailAlt climacon_component-stroke_hailAlt-middle">
-                                                <circle cx="49.999" cy="65.498" r="2"></circle>
-                                            </g>
-                                            <g class="climacon_component climacon_component-stroke climacon_component-stroke_hailAlt climacon_component-stroke_hailAlt-right">
-                                                <circle cx="57.998" cy="65.498" r="2"></circle>
-                                            </g>
-                                        </g>
-                                        <g class="climacon_wrapperComponent climacon_wrapperComponent-cloud">
-                                            <path class="climacon_component climacon_component-stroke climacon_component-stroke_cloud" d="M63.999,64.941v-4.381c2.39-1.384,3.999-3.961,3.999-6.92c0-4.417-3.581-8-7.998-8c-1.602,0-3.084,0.48-4.334,1.291c-1.23-5.317-5.974-9.29-11.665-9.29c-6.626,0-11.998,5.372-11.998,11.998c0,3.549,1.55,6.728,3.999,8.924v4.916c-4.776-2.768-7.998-7.922-7.998-13.84c0-8.835,7.162-15.997,15.997-15.997c6.004,0,11.229,3.311,13.966,8.203c0.663-0.113,1.336-0.205,2.033-0.205c6.626,0,11.998,5.372,11.998,12C71.998,58.863,68.656,63.293,63.999,64.941z"></path>
-                                        </g>
-                                    </g>
-                                </svg>
-                            </div>
-                            <div class="weather-details text-center">
-                                <span class="block white darken-1">Snow</span>
-                                <span class="font-large-2 block white darken-4">-5&deg;</span>
-                                <span class="font-medium-4 text-bold-500 white darken-1">London, UK</span>
-                            </div>
-                        </div>
-                        <div class="card-footer bg-gradient-x-danger border-0">
-                            <div class="row">
-                                <div class="col-4 text-center display-table-cell white">
-                                    <i class="me-wind font-large-1 lighten-3 align-middle"></i> <span class="align-middle">2MPH</span>
-                                </div>
-                                <div class="col-4 text-center display-table-cell white">
-                                    <i class="me-sun2 font-large-1 lighten-3 align-middle"></i> <span class="align-middle">2%</span>
-                                </div>
-                                <div class="col-4 text-center display-table-cell white">
-                                    <i class="me-thermometer font-large-1 lighten-3 align-middle"></i> <span class="align-middle">13.0&deg;</span>
-                                </div>
-                            </div>
+                        <div class="card-body text-center">
+                        <img src="{{ asset('assets/images/zerodha-banner.jpg') }}" alt="Zerodha Mutual Fund" class="img-fluid">
+
+
+                            <h4 class="white mt-2">Invest Smart with Zerodha</h4>
+                            <p class="white">Start investing in mutual funds with zero commission.</p>
+                            <a href="https://zerodha.com/mutualfunds/" class="btn btn-black">Learn More</a>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Mutual Fund Tips -->
             <div class="col-xl-4 col-lg-12">
                 <div class="card bg-gradient-x-info white">
                     <div class="card-content">
                         <div class="card-body text-center">
-                            <div class="mb-2">
-                                <i class="fa fa-twitter font-large-2"></i>
-                            </div>
-                            <div class="tweet-slider">
+                            <i class="fa fa-line-chart font-large-2"></i>
+                            <div class="investment-tips-slider">
                                 <ul>
-                                    <li>Congratulations to Rob Jones in accounting for winning our <span class="yellow">#NFL</span> football pool!
-                                        <p class="text-italic pt-1">- John Doe</p>
-                                    </li>
-                                    <li>Contests are a great thing to partner on. Partnerships immediately <span class="yellow">#DOUBLE</span> the reach.
-                                        <p class="text-italic pt-1">- John Doe</p>
-                                    </li>
-                                    <li>Puns, humor, and quotes are great content on <span class="yellow">#Twitter</span>. Find some related to your business.
-                                        <p class="text-italic pt-1">- John Doe</p>
-                                    </li>
-                                    <li>Are there <span class="yellow">#common-sense</span> facts related to your business? Combine them with a great photo.
-                                        <p class="text-italic pt-1">- John Doe</p>
-                                    </li>
+                                    <li>"SIP is the best way to create long-term wealth. Start today!"</li>
+                                    <li>"Diversify your portfolio to reduce risk and maximize returns."</li>
+                                    <li>"Check expense ratios before choosing a mutual fund."</li>
+                                    <li>"Long-term investment beats market timing. Stay invested!"</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Fund Performance Highlights -->
             <div class="col-xl-4 col-lg-12">
                 <div class="card bg-gradient-x-primary white">
                     <div class="card-content">
                         <div class="card-body text-center">
-                            <div class="mb-2">
-                                <i class="fa fa-facebook font-large-2"></i>
-                            </div>
-                            <div class="fb-post-slider">
+                            <i class="fa fa-bar-chart font-large-2"></i>
+                            <div class="fund-performance-slider">
                                 <ul>
-                                    <li>Congratulations to Rob Jones in accounting for winning our #NFL football pool!
-                                        <p class="text-italic pt-1">- John Doe</p>
-                                    </li>
-                                    <li>Contests are a great thing to partner on. Partnerships immediately #DOUBLE the reach.
-                                        <p class="text-italic pt-1">- John Doe</p>
-                                    </li>
-                                    <li>Puns, humor, and quotes are great content on #Twitter. Find some related to your business.
-                                        <p class="text-italic pt-1">- John Doe</p>
-                                    </li>
-                                    <li>Are there #common-sense facts related to your business? Combine them with a great photo.
-                                        <p class="text-italic pt-1">- John Doe</p>
-                                    </li>
+                                    <li>"Axis Bluechip Fund: 12% CAGR over 5 years!"</li>
+                                    <li>"Mirae Asset Emerging Bluechip Fund: High growth potential!"</li>
+                                    <li>"Best ELSS funds for tax saving: Invest before March 31!"</li>
+                                    <li>"HDFC Mid-Cap Opportunities Fund: 15% CAGR over 10 years!"</li>
                                 </ul>
                             </div>
                         </div>
@@ -502,6 +476,7 @@
                 </div>
             </div>
         </div>
+
         <!--/ Social & Weather -->
         <!-- Basic Horizontal Timeline -->
         <div class="row match-height">
