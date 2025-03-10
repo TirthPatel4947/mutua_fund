@@ -50,6 +50,10 @@ Route::group(['middleware' => ['UserAccess']], function () {
     Route::get('/fund-details', [DashboardController::class, 'fundDetails'])->name('fund.details');
     Route::get('/get-investment-data', [DashboardController::class, 'getInvestmentData']);
     Route::get('/fund-performance', [DashboardController::class, 'getFundPerformance'])->name('fund.performance');
+    Route::get('/fetch-top-data', [DashboardController::class, 'fetchTopData'])->name('fetch.top.data');
+
+
+
 
     // edit account
     Route::get('/user', [profilecontroller::class, 'edit'])->name('user');

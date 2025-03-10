@@ -17,6 +17,11 @@
 
 
                     <div class="col-6 text-right">
+                        <a href="{{ route('import') }}">
+                            <button class="btn btn-primary  rounded-pill px-4 py-1" id="importExcelBtn">
+                                <i class="feather icon-download"></i> Import Excel
+                            </button>
+                        </a>
                         <a href="{{ route('card') }}">
                             <button class="btn btn-danger rounded-pill px-4 py-1" style="font-size: 16px;">
                                 Invest Now
@@ -60,7 +65,7 @@
                                 <div class="icon-container mb-3">
                                     <i class="feather icon-percent font-large-2 text-warning"></i>
                                 </div>
-                                <h5 class="card-title text-muted">Current Percentage (%)</h5>
+                                <h5 class="card-title text-muted">Current Percentage </h5>
                                 <h3 class="text-bold-600">
                                     <span style="color: {{ (float)$percentageGain > 0 ? 'green' : ((float)$percentageGain < 0 ? 'red' : 'black') }};">
                                         {{ $percentageGain }}%
@@ -246,177 +251,97 @@
 
 
 
-
-
-
-
-
-
-
         <!-- table details  -->
         <div class="row match-height">
             <div class="col-xl-12 col-lg-12">
                 <div class="card">
-                    <div class="card-header">
-                        <h4 class="card-title">Mutual Fund Performance Overview</h4>
-                        <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
-                        <div class="heading-elements">
-                            <ul class="list-inline mb-0">
-                                <li><a data-action="reload"><i class="feather icon-rotate-cw"></i></a></li>
-                                <li><a data-action="expand"><i class="feather icon-maximize"></i></a></li>
-                            </ul>
-                        </div>
-                        <div class="float-right mt-2">
-                            <a href="{{ route('import') }}">
-                                <button class="btn btn-primary btn-sm mr-2" id="importExcelBtn">
-                                    <i class="feather icon-download"></i> Import Excel
-                                </button>
-                            </a>
-                            <button class="btn btn-success btn-sm" id="exportExcelBtn">
-                                <i class="feather icon-upload"></i> Export Excel
-                            </button>
-                        </div>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="card-title">Top Gainers & Losers</h4>
                     </div>
+
                     <div class="card-content">
                         <div class="card-body">
-                            <p>Total funds: 3... Active funds: 1.</p>
-                        </div>
-                        <div class="table-responsive">
-                            <table id="fund-performance" class="table table-hover mb-0 ps-container ps-theme-default">
-                                <thead>
-                                    <tr>
-                                        <th>Fund Name</th>
-                                        <th>Total Value</th>
-                                        <th>Investment NAV</th>
-                                        <th>Current NAV</th>
-                                        <th>Unit</th>
-                                        <th>Annual Return (%)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Fund A -->
-                                    <tr data-toggle="collapse" data-target="#fundDetails1" class="clickable-row">
-                                        <td class="text-truncate">Growth Fund A</td>
-                                        <td class="text-truncate">$ 22,500</td>
-                                        <td class="text-truncate">$ 140.00</td>
-                                        <td class="text-truncate">$ 150.00</td>
-                                        <td class="text-truncate">150</td>
-                                        <td class="text-truncate">5.25</td>
-                                    </tr>
-                                    <!-- Details for Fund A -->
-                                    <tr id="fundDetails1" class="collapse">
-                                        <td colspan="7">
-                                            <table class="table table-sm table-bordered">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Investor</th>
-                                                        <th>Investment Amount</th>
-                                                        <th>Investment NAV</th>
-                                                        <th>Units</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td>Tirth</td>
-                                                        <td>$ 12,500</td>
-                                                        <td>$ 140.00</td>
-                                                        <td>90</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Parth</td>
-                                                        <td>$ 10,000</td>
-                                                        <td>$ 140.00</td>
-                                                        <td>60</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </td>
-                                    </tr>
+                         <div class="row">
+    <!-- Top Gainers -->
+    <div class="col-md-6 d-flex">
+        <div class="rounded shadow-sm p-3 w-100"
+            style="background: linear-gradient(135deg, #e0f7e9, #b2d8b2); border-left: 5px solid #28a745; min-height: 150px;">
+            <h5 class="text-success font-weight-bold mb-3">📈 Top Gainers</h5>
+            <div id="topGainers"></div>
+        </div>
+    </div>
 
-                                    <!-- Fund B -->
-                                    <tr data-toggle="collapse" data-target="#fundDetails2" class="clickable-row">
-                                        <td class="text-truncate">Equity Fund B</td>
-                                        <td class="text-truncate">$ 26,000</td>
-                                        <td class="text-truncate">$ 125.00</td>
-                                        <td class="text-truncate">$ 130.00</td>
-                                        <td class="text-truncate">200</td>
-                                        <td class="text-truncate">4.80</td>
-                                    </tr>
-                                    <!-- Details for Fund B -->
-                                    <tr id="fundDetails2" class="collapse">
-                                        <td colspan="7">
-                                            <table class="table table-sm table-bordered">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Investor</th>
-                                                        <th>Investment Amount</th>
-                                                        <th>Investment NAV</th>
-                                                        <th>Units</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td>tirth</td>
-                                                        <td>$ 16,000</td>
-                                                        <td>$ 125.00</td>
-                                                        <td>128</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>parth</td>
-                                                        <td>$ 10,000</td>
-                                                        <td>$ 125.00</td>
-                                                        <td>80</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </td>
-                                    </tr>
+    <!-- Top Losers -->
+    <div class="col-md-6 d-flex">
+        <div class="rounded shadow-sm p-3 w-100"
+            style="background: linear-gradient(135deg, #fdecea, #f5c6cb); border-left: 5px solid #dc3545; min-height: 150px;">
+            <h5 class="text-danger font-weight-bold mb-3">📉 Top Losers</h5>
+            <div id="topLosers"></div>
+        </div>
+    </div>
+</div>
 
-                                    <!-- Fund C -->
-                                    <tr data-toggle="collapse" data-target="#fundDetails3" class="clickable-row">
-                                        <td class="text-truncate">Real Estate Fund C</td>
-                                        <td class="text-truncate">$ 25,000</td>
-                                        <td class="text-truncate">$ 245.00</td>
-                                        <td class="text-truncate">$ 250.00</td>
-                                        <td class="text-truncate">100</td>
-                                        <td class="text-truncate">3.75</td>
-                                    </tr>
-                                    <!-- Details for Fund C -->
-                                    <tr id="fundDetails3" class="collapse">
-                                        <td colspan="7">
-                                            <table class="table table-sm table-bordered">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Investor</th>
-                                                        <th>Investment Amount</th>
-                                                        <th>Investment NAV</th>
-                                                        <th>Units</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td>tirth</td>
-                                                        <td>$ 15,000</td>
-                                                        <td>$ 245.00</td>
-                                                        <td>61</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>parth</td>
-                                                        <td>$ 10,000</td>
-                                                        <td>$ 245.00</td>
-                                                        <td>40</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+
+        <script>
+    $(document).ready(function () {
+        function fetchTopData() {
+            $.ajax({
+                url: "{{ route('fetch.top.data') }}",
+                method: "GET",
+                success: function (response) {
+                    // Clear Previous Data
+                    $('#topGainers').empty();
+                    $('#topLosers').empty();
+
+                    // Append Gainers Data
+                    if (response.topGainers.length) {
+                        $.each(response.topGainers, function (index, gainer) {
+                            $('#topGainers').append(`
+                                <div class="d-flex justify-content-between">
+                                    <span>${gainer.fundname}</span>
+                                    <span class="badge badge-success">
+                                        ₹${parseFloat(gainer.difference).toFixed(2)}
+                                    </span>
+                                </div>
+                            `);
+                        });
+                    } else {
+                        $('#topGainers').html('<p>No gainers data available.</p>');
+                    }
+
+                    // Append Losers Data
+                    if (response.topLosers.length) {
+                        $.each(response.topLosers, function (index, loser) {
+                            $('#topLosers').append(`
+                                <div class="d-flex justify-content-between">
+                                    <span>${loser.fundname}</span>
+                                    <span class="badge badge-danger">
+                                        ₹${parseFloat(loser.difference).toFixed(2)}
+                                    </span>
+                                </div>
+                            `);
+                        });
+                    } else {
+                        $('#topLosers').html('<p>No losers data available.</p>');
+                    }
+                },
+                error: function () {
+                    console.error('Failed to fetch data.');
+                }
+            });
+        }
+
+        // Fetch data on page load
+        fetchTopData();
+    });
+</script>
 
 
         <!-- <!detials in table -->
@@ -427,7 +352,7 @@
                 <div class="card bg-gradient-x-danger">
                     <div class="card-content">
                         <div class="card-body text-center">
-                        <img src="{{ asset('assets/images/zerodha-banner.jpg') }}" alt="Zerodha Mutual Fund" class="img-fluid">
+                            <img src="{{ asset('assets/images/zerodha-banner.jpg') }}" alt="Zerodha Mutual Fund" class="img-fluid">
 
 
                             <h4 class="white mt-2">Invest Smart with Zerodha</h4>

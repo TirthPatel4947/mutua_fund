@@ -33,6 +33,11 @@
                     </div>
                 </div>
             </div>
+            <div class="float-right mt-2">
+                <button class="btn btn-primary btn-sm px-4" id="exportExcelBtn">
+                    <i class="feather icon-upload"></i> Export Excel
+                </button>
+            </div>
 
             <!-- Buy Report Table -->
             <div id="buyReport" class="report-section mt-4">
@@ -314,10 +319,12 @@
 </script>
 <style>
     #dateRangeFilter::placeholder {
-    font-weight: 380; /* Extra Bold */
-    color: #000; /* Dark Black */
-    opacity: 1; /* Ensure full visibility */
-}
-
+        font-weight: 380;
+        /* Extra Bold */
+        color: #000;
+        /* Dark Black */
+        opacity: 1;
+        /* Ensure full visibility */
+    }
 </style>
 @endsection

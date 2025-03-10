@@ -202,4 +202,72 @@ class DashboardController
             'fundInvestments' => $fundInvestments
         ]);
     }
+    public function fetchTopData()
+{
+    $funds = DB::select("
+        SELECT 
+            mf.fundname,
+            FORMAT(IFNULL(nh1.nav, 0), 2) AS old_nav,  -- ✅ Using FORMAT() for better spacing
+            FORMAT(IFNULL(nh2.nav, 0), 2) AS new_nav,  -- ✅ Improved precision and alignment
+            IFNULL(
+                SUM(CASE WHEN rh.status = 1 THEN rh.unit ELSE 0 END) - 
+                SUM(CASE WHEN rh.status = 0 THEN rh.unit ELSE 0 END), 
+                0
+            ) AS current_units,
+            FORMAT(
+                (IFNULL(nh2.nav, 0) - IFNULL(nh1.nav, 0)) * 
+                IFNULL(
+                    (SUM(CASE WHEN rh.status = 1 THEN rh.unit ELSE 0 END) - 
+                     SUM(CASE WHEN rh.status = 0 THEN rh.unit ELSE 0 END)
+                    ), 
+                0)
+            , 2) AS difference
+        FROM 
+            mutualfund_master AS mf
+        LEFT JOIN 
+            mutual_nav_history AS nh1 
+            ON mf.id = nh1.fundname_id
+            AND nh1.date = (
+                SELECT MAX(date) 
+                FROM mutual_nav_history 
+                WHERE fundname_id = nh1.fundname_id
+                AND date < (
+                    SELECT MAX(date) 
+                    FROM mutual_nav_history
+                )
+            )
+        LEFT JOIN 
+            mutual_nav_history AS nh2 
+            ON mf.id = nh2.fundname_id
+            AND nh2.date = (
+                SELECT MAX(date) 
+                FROM mutual_nav_history
+            )
+        LEFT JOIN 
+            report_history AS rh 
+            ON mf.id = rh.fundname_id
+            AND (rh.user_id = :user_id OR rh.user_id IS NULL)
+        GROUP BY 
+            mf.fundname, nh1.nav, nh2.nav
+        ORDER BY 
+            difference DESC
+    ", ['user_id' => auth()->id()]);
+
+    // Show Top 3 Gainers and Top 3 Losers
+    $topGainers = collect($funds)->where('difference', '>', 0)->sortByDesc('difference')->take(3)->values();
+    $topLosers = collect($funds)->where('difference', '<', 0)->sortBy('difference')->take(3)->values();
+
+    return response()->json([
+        'topGainers' => $topGainers,
+        'topLosers' => $topLosers
+    ]);
 }
+
+    
+    
+    
+     
+}
+
+
+
