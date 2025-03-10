@@ -290,57 +290,42 @@
 
 
         <script>
-    $(document).ready(function () {
-        function fetchTopData() {
-            $.ajax({
-                url: "{{ route('fetch.top.data') }}",
-                method: "GET",
-                success: function (response) {
-                    // Clear Previous Data
-                    $('#topGainers').empty();
-                    $('#topLosers').empty();
-
-                    // Append Gainers Data
-                    if (response.topGainers.length) {
-                        $.each(response.topGainers, function (index, gainer) {
-                            $('#topGainers').append(`
-                                <div class="d-flex justify-content-between">
-                                    <span>${gainer.fundname}</span>
-                                    <span class="badge badge-success">
-                                        ₹${parseFloat(gainer.difference).toFixed(2)}
-                                    </span>
-                                </div>
-                            `);
-                        });
-                    } else {
-                        $('#topGainers').html('<p>No gainers data available.</p>');
-                    }
-
-                    // Append Losers Data
-                    if (response.topLosers.length) {
-                        $.each(response.topLosers, function (index, loser) {
-                            $('#topLosers').append(`
-                                <div class="d-flex justify-content-between">
-                                    <span>${loser.fundname}</span>
-                                    <span class="badge badge-danger">
-                                        ₹${parseFloat(loser.difference).toFixed(2)}
-                                    </span>
-                                </div>
-                            `);
-                        });
-                    } else {
-                        $('#topLosers').html('<p>No losers data available.</p>');
-                    }
-                },
-                error: function () {
-                    console.error('Failed to fetch data.');
-                }
-            });
+  $(document).ready(function () {
+    $.ajax({
+        url: "{{ route('fetch.top.data') }}",  // Replace with your route
+        method: "GET",
+        success: function (response) {
+            renderFunds("#topGainers", response.topGainers);
+            renderFunds("#topLosers", response.topLosers);
+        },
+        error: function (error) {
+            console.error("Error fetching data:", error);
         }
-
-        // Fetch data on page load
-        fetchTopData();
     });
+
+    function renderFunds(containerId, funds) {
+        let html = "";
+        if (funds.length > 0) {
+            funds.forEach(fund => {
+                html += `
+                    <div class="d-flex justify-content-between align-items-center py-1">
+                        <div class="text-left">
+                            <strong>${fund.fundname}</strong>
+                        </div>
+                        <div class="text-right">
+                            ₹${fund.difference} (${fund.percentage_change}%)
+                        </div>
+                    </div>
+                    <hr class="my-1" style="border-top: 1px dashed #aaa;"> <!-- Separator Line -->
+                `;
+            });
+        } else {
+            html = `<p class="text-muted">No data available</p>`;
+        }
+        $(containerId).html(html);
+    }
+});
+
 </script>
 
 
