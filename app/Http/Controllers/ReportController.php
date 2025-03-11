@@ -9,6 +9,9 @@ use App\Models\ReportHistory;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use App\Models\Portfolio;
+use Illuminate\Support\Facades\DB;
+
+
 class ReportController
 {
 
@@ -242,7 +245,7 @@ class ReportController
                 'total_price' => $saleData->price,
             ]);
         }
-    
+
         // Otherwise, return the view with data
         return view('sale', compact('saleData', 'funds', 'portfolios'));
     }
@@ -283,6 +286,56 @@ class ReportController
         return response()->json(['error' => 'Failed to update the sale record. Error: ' . $e->getMessage()], 500);
     }
 }
+public function combinedReport(Request $request)
+{
+    $userId = auth()->id(); // Get authenticated user ID
 
-    
+    $query = DB::table('report_history')
+        ->join('mutualfund_master', 'report_history.fundname_id', '=', 'mutualfund_master.id')
+        ->join('portfolios', 'report_history.portfolio_id', '=', 'portfolios.id')
+        ->select(
+            DB::raw("CASE 
+                        WHEN report_history.status = 1 THEN 'Purchase' 
+                        WHEN report_history.status = 0 THEN 'Redemption' 
+                    END AS type"),
+            'portfolios.name as portfolio_name',
+            'mutualfund_master.fundname as fund_name',
+            'report_history.date as date',
+            'report_history.unit as quantity_of_shares',
+
+            // Corrected Price Per Unit Calculation
+            DB::raw("ROUND(
+                CASE 
+                    WHEN report_history.status = 1 THEN report_history.price / NULLIF(report_history.unit, 0)
+                    WHEN report_history.status = 0 THEN ABS(report_history.price) / ABS(NULLIF(report_history.unit, 0))
+                END, 2) as price_per_unit"),
+
+            // Corrected Total Price Calculation with Redemption Fix
+            DB::raw("ROUND(
+                CASE 
+                    WHEN report_history.status = 1 THEN report_history.price 
+                    WHEN report_history.status = 0 THEN ABS(report_history.unit) * (ABS(report_history.price) / ABS(NULLIF(report_history.unit, 0))) * -1
+                END, 2) as total_price"),
+            
+            'report_history.id'
+        )
+        ->where('report_history.user_id', $userId);
+
+    // Apply filters
+    if ($request->filled('date_range')) {
+        $dateRange = explode(' - ', $request->date_range);
+        $query->whereBetween('report_history.date', [$dateRange[0], $dateRange[1]]);
+    }
+
+    if ($request->filled('portfolio_id')) {
+        $query->where('report_history.portfolio_id', $request->portfolio_id);
+    }
+
+    return datatables()->of($query)->make(true);
+}
+
+
+
+
+
 }

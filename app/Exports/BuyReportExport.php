@@ -5,8 +5,7 @@ namespace App\Exports;
 use App\Models\ReportHistory;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Illuminate\Support\Facades\DB;  
-
+use Illuminate\Support\Facades\DB;
 
 class BuyReportExport implements FromCollection, WithHeadings
 {
@@ -20,14 +19,15 @@ class BuyReportExport implements FromCollection, WithHeadings
     public function collection()
     {
         $query = ReportHistory::query()
-            ->join('portfolios', 'report_history.portfolio_id', '=', 'portfolios.id')
+            ->join('portfolios', 'report_history.portfolio_id', '=', 'portfolios.id') // ✅ Join with portfolios table
             ->join('mutualfund_master', 'report_history.fundname_id', '=', 'mutualfund_master.id')
             ->select(
-                'portfolios.name as portfolio_name',
+                'report_history.id',
+                'portfolios.name as portfolio_name',  // ✅ Display portfolio name instead of ID
                 'mutualfund_master.fundname as fund_name',
                 'report_history.date as buying_date',
-                'report_history.unit',
-                'report_history.price',
+                'report_history.unit as quantity_of_shares',
+                'report_history.price as price_per_unit',
                 DB::raw('(report_history.unit * report_history.price) AS total_price')
             )
             ->where('report_history.status', 1);
@@ -49,7 +49,8 @@ class BuyReportExport implements FromCollection, WithHeadings
     public function headings(): array
     {
         return [
-            'Portfolio Name',
+            'ID',
+            'Portfolio Name',  // ✅ Corrected to show Portfolio Name instead of ID
             'Fund Name',
             'Buying Date',
             'Quantity of Shares',

@@ -84,6 +84,8 @@ Route::group(['middleware' => ['UserAccess']], function () {
     Route::put('/report/update/{id}', [ReportController::class, 'update'])->name('report.update');
     Route::get('/report/sale/edit/{id}', [ReportController::class, 'editSale'])->name('report.sale.edit');
     Route::put('/report/sale/update/{id}', [ReportController::class, 'updateSale'])->name('report.sale.update');
+    Route::get('/report/combined', [ReportController::class, 'combinedReport'])->name('report.combined');
+
 
     // buy fund
     Route::get('/buy', [BuyController::class, 'index'])->name('buy');
@@ -109,7 +111,10 @@ Route::group(['middleware' => ['UserAccess']], function () {
     Route::post('/portfolio', [PortfolioController::class, 'store'])->name('portfolio.store')->middleware('auth');
 
 // export file
-    Route::get('/report/export', [ReportExportController::class, 'export'])->name('report.export');
+Route::get('/report/export-buy', [ReportExportController::class, 'exportBuy'])->name('report.export.buy');
+Route::get('/report/export-sell', [ReportExportController::class, 'exportSell'])->name('report.export.sell');
+Route::get('/report/export-combined', [ReportExportController::class, 'exportCombined'])->name('report.export.combined');
+
 });
 
 

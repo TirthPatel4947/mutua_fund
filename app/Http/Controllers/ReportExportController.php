@@ -2,30 +2,41 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Exports\BuyReportExport;
 use App\Exports\SellReportExport;
+use App\Exports\CombinedReportExport;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
-class ReportExportController 
+class ReportExportController
 {
-    public function export(Request $request)
+    public function exportBuy(Request $request)
     {
-        $action = $request->input('action');  // 'buy' or 'sell'
-
         $filters = [
             'portfolio_id' => $request->input('portfolio_id'),
             'date_range' => $request->input('date_range'),
         ];
 
-        if ($action === 'buy') {
-            return Excel::download(new BuyReportExport($filters), 'buy_report.xlsx');
-        }
+        return Excel::download(new BuyReportExport($filters), 'buy_report.xlsx');
+    }
 
-        if ($action === 'sell') {
-            return Excel::download(new SellReportExport($filters), 'sell_report.xlsx');
-        }
+    public function exportSell(Request $request)
+    {
+        $filters = [
+            'portfolio_id' => $request->input('portfolio_id'),
+            'date_range' => $request->input('date_range'),
+        ];
 
-        return back()->with('error', 'Invalid report type selected.');
+        return Excel::download(new SellReportExport($filters), 'sell_report.xlsx');
+    }
+
+    public function exportCombined(Request $request)
+    {
+        $filters = [
+            'portfolio_id' => $request->input('portfolio_id'),
+            'date_range' => $request->input('date_range'),
+        ];
+
+        return Excel::download(new CombinedReportExport($filters), 'combined_report.xlsx');
     }
 }

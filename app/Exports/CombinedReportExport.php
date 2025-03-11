@@ -7,7 +7,7 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Illuminate\Support\Facades\DB;
 
-class SellReportExport implements FromCollection, WithHeadings
+class CombinedReportExport implements FromCollection, WithHeadings
 {
     protected $filters;
 
@@ -19,18 +19,18 @@ class SellReportExport implements FromCollection, WithHeadings
     public function collection()
     {
         $query = ReportHistory::query()
-            ->join('portfolios', 'report_history.portfolio_id', '=', 'portfolios.id') // ✅ Join to fetch portfolio name
+            ->join('portfolios', 'report_history.portfolio_id', '=', 'portfolios.id') // ✅ Fetch portfolio name
             ->join('mutualfund_master', 'report_history.fundname_id', '=', 'mutualfund_master.id')
             ->select(
                 'report_history.id',
-                'portfolios.name as portfolio_name',  // ✅ Display portfolio name
+                'portfolios.name as portfolio_name', // ✅ Show Portfolio Name
                 'mutualfund_master.fundname as fund_name',
-                'report_history.date as selling_date',
+                'report_history.date as transaction_date',
+                'report_history.status as type', // 1 = Buy, 0 = Sell
                 'report_history.unit as quantity_of_shares',
                 'report_history.price as price_per_unit',
                 DB::raw('(report_history.unit * report_history.price) AS total_price')
-            )
-            ->where('report_history.status', 0);
+            );
 
         // Filter by Portfolio ID (if provided)
         if (!empty($this->filters['portfolio_id'])) {
@@ -43,16 +43,23 @@ class SellReportExport implements FromCollection, WithHeadings
             $query->whereBetween('report_history.date', [$startDate, $endDate]);
         }
 
-        return $query->get();
+        // Convert 'status' to 'Buy' or 'Sell'
+        $data = $query->get()->map(function ($item) {
+            $item->type = $item->type == 1 ? 'Buy' : 'Sell'; // ✅ Converts 1/0 to 'Buy'/'Sell'
+            return $item;
+        });
+
+        return $data;
     }
 
     public function headings(): array
     {
         return [
             'ID',
-            'Portfolio Name',  // ✅ Corrected to show Portfolio Name
+            'Portfolio Name',  // ✅ Display Portfolio Name instead of ID
             'Fund Name',
-            'Selling Date',
+            'Transaction Date',
+            'Type', // ✅ Corrected for 'Buy' or 'Sell'
             'Quantity of Shares',
             'Price Per Unit',
             'Total Price'
