@@ -107,6 +107,9 @@ Route::group(['middleware' => ['UserAccess']], function () {
 
     // Route to store a new portfolio (Form Submission)
     Route::post('/portfolio', [PortfolioController::class, 'store'])->name('portfolio.store')->middleware('auth');
+
+// export file
+    Route::get('/report/export', [ReportExportController::class, 'export'])->name('report.export');
 });
 
 
@@ -121,4 +124,4 @@ Route::get('fetch-nav', [navcontroller::class, 'nav']);
 
 
 
-Route::get('/report/export', [ReportExportController::class, 'export'])->name('report.export');
+
