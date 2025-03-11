@@ -13,7 +13,7 @@ use App\Http\Controllers\MutualFundMasterController;
 use App\Http\Controllers\navcontroller;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
-
+use App\Http\Controllers\ReportExportController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -61,9 +61,6 @@ Route::group(['middleware' => ['UserAccess']], function () {
     Route::post('/profile/avatar/update', [UserController::class, 'updateAvatar'])->name('profile.avatar.update');
     Route::post('/profile/avatar/remove', [UserController::class, 'removeAvatar'])->name('profile.avatar.remove');
 
-    // pan card
-    Route::get('/card', [CardController::class, 'showForm'])->name('card');
-    Route::post('/card', [CardController::class, 'processForm']);
 
     // Route to show the import form (named as 'import')
     Route::get('/import', [ImportController::class, 'showImportForm'])->name('import');
@@ -122,3 +119,6 @@ Route::get('fetch-nav', [navcontroller::class, 'nav']);
 
 
 
+
+
+Route::get('/report/export', [ReportExportController::class, 'export'])->name('report.export');

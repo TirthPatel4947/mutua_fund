@@ -22,11 +22,6 @@
                                 <i class="feather icon-download"></i> Import Excel
                             </button>
                         </a>
-                        <a href="{{ route('card') }}">
-                            <button class="btn btn-danger rounded-pill px-4 py-1" style="font-size: 16px;">
-                                Invest Now
-                            </button>
-                        </a>
                     </div>
                 </div>
 
@@ -288,32 +283,34 @@
             </div>
         </div>
 
-
         <script>
-  $(document).ready(function () {
+$(document).ready(function () {
     $.ajax({
         url: "{{ route('fetch.top.data') }}",  // Replace with your route
         method: "GET",
         success: function (response) {
-            renderFunds("#topGainers", response.topGainers);
-            renderFunds("#topLosers", response.topLosers);
+            renderFunds("#topGainers", response.topGainers, "green");
+            renderFunds("#topLosers", response.topLosers, "red");
         },
         error: function (error) {
             console.error("Error fetching data:", error);
         }
     });
 
-    function renderFunds(containerId, funds) {
+    function renderFunds(containerId, funds, color) {
         let html = "";
         if (funds.length > 0) {
             funds.forEach(fund => {
+                const sign = fund.difference >= 0 ? "+" : "-";
+                const textColor = fund.difference >= 0 ? "green" : "red";
+
                 html += `
                     <div class="d-flex justify-content-between align-items-center py-1">
                         <div class="text-left">
                             <strong>${fund.fundname}</strong>
                         </div>
-                        <div class="text-right">
-                            ₹${fund.difference} (${fund.percentage_change}%)
+                        <div class="text-right" style="color: ${textColor}; font-weight: bold;">
+                            ₹${fund.difference} (${sign}${fund.percentage_change}%)
                         </div>
                     </div>
                     <hr class="my-1" style="border-top: 1px dashed #aaa;"> <!-- Separator Line -->
@@ -325,8 +322,8 @@
         $(containerId).html(html);
     }
 });
-
 </script>
+
 
 
         <!-- <!detials in table -->

@@ -46,24 +46,11 @@
                 </a>
             </li>
 
-            <!-- My Watchlist Link -->
-            <li class="nav-item">
-                <a href="/watchlist" aria-label="My Watchlist">
-                    <i class="feather icon-heart"></i>
-                    <span class="menu-title" data-i18n="My Watchlist">My Watchlist</span>
-                </a>
-            </li>
+            
 
 
 
 
-            <!-- Fund/Stock Link -->
-            <li class="nav-item">
-                <a href="/fund" aria-label="Fund/Stock">
-                    <i class="feather icon-credit-card"></i>
-                    <span class="menu-title" data-i18n="Fund/Stock">Fund/Stock</span>
-                </a>
-            </li>
 
             <!-- Portfolio Link -->
             <li class="nav-item">
@@ -74,13 +61,7 @@
             </li>
 
 
-            <!--  More Link -->
-            <li class="nav-item">
-                <a href="/more" aria-label="More">
-                    <i class="feather icon-more-horizontal"></i>
-                    <span class="menu-title" data-i18n="More">More</span>
-                </a>
-            </li>
+       
         </ul>
     </div>
 </div>

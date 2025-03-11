@@ -293,6 +293,19 @@
         });
 
 
+        $('#exportExcelBtn').click(function () {
+    const action = $('#actionSelect').val();
+    const portfolioId = $('#portfolioSelect').val();
+    const dateRange = $('#dateRangeFilter').val();
+
+    const queryParams = $.param({
+        action: action,
+        portfolio_id: portfolioId,
+        date_range: dateRange
+    });
+
+    window.location.href = `/report/export?${queryParams}`;
+});
 
         // Toggle function for Buy vs. Sell views
         function showReport() {
