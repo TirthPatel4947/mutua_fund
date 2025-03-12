@@ -63,16 +63,11 @@ Route::group(['middleware' => ['UserAccess']], function () {
 
 
     // Route to show the import form (named as 'import')
-    Route::get('/import', [ImportController::class, 'showImportForm'])->name('import');
-
-    // Route to handle the file upload (POST request)
-    Route::post('/import', [ImportController::class, 'import'])->name('import.excel');
-
-    // Route for successful import page
-    Route::get('/import-success', function () {
-        return view('import-success'); // This page will show after successful import
-    });
-
+    Route::get('/import', [ImportController::class, 'showImportPage'])->name('import.show');
+    Route::post('/import/process', [ImportController::class, 'processImport'])->name('import.process');
+    Route::post('/import-submit', [ImportController::class, 'submit'])->name('import.submit');
+    Route::get('/import-list', [ImportController::class, 'list'])->name('import.list');
+    
 
     // buy/sale report page
     Route::get('/report', [ReportController::class, 'index'])->name('report');

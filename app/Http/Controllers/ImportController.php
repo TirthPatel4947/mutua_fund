@@ -1,33 +1,41 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\FundImport;
+use App\Models\sample;
 
-class ImportController
+class ImportController 
 {
-    // Method to return the import view
-    public function showImportForm()
+    // Show the import page
+    public function showImportPage()
     {
-        return view('importexcel');  // View for file upload form
+        return view('import'); // Ensure 'import.blade.php' exists in the resources/views directory
     }
 
-    // Method to handle file upload without validation
-    public function import(Request $request)
+    // Handle file upload and import data
+    public function submit(Request $request)
     {
-        // Retrieve the uploaded file
-        $file = $request->file('excelFile');
+        // Validate the uploaded file
+        $request->validate([
+            'excel_file' => 'required|mimes:xlsx,xls'
+        ]);
 
-        // If a file is uploaded, process it
-        if ($file) {
-            // You can save the file or handle the logic to process the file here
-            $path = $file->storeAs('uploads', $file->getClientOriginalName());
+        try {
+            // Import data using FundImport
+            Excel::import(new FundImport, $request->file('excel_file'));
 
-            // Return success message
-            return back()->with('success', 'File uploaded successfully!');
+            return response()->json(['message' => 'Data imported successfully!']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error importing data: ' . $e->getMessage()], 500);
         }
+    }
 
-        // If no file is uploaded, return an error message
-        return back()->with('error', 'No file selected!');
+    // Fetch the latest inserted data
+    public function list()
+    {
+        $data = sample::latest()->take(50)->get(); // Fetch last 50 records
+        return response()->json($data);
     }
 }

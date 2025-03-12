@@ -15,14 +15,14 @@
                         </h1>
                     </div>
 
-
                     <div class="col-6 text-right">
-                        <a href="{{ route('import') }}">
-                            <button class="btn btn-primary  rounded-pill px-4 py-1" id="importExcelBtn">
-                                <i class="feather icon-download"></i> Import Excel
-                            </button>
-                        </a>
-                    </div>
+    <a href="{{ route('import') }}">
+        <button class="btn btn-primary rounded-pill px-4 py-1">
+            <i class="feather icon-upload"></i> Import Excel
+        </button>
+    </a>
+</div>
+
                 </div>
 
                 <!-- Row for 4 Cards -->
