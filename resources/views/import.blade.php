@@ -88,7 +88,7 @@ function loadInsertedData() {
                 <td>${row.portfolio}</td>
                 <td>${row.fund_name}</td>
                 <td>${row.date}</td>
-                <td>${row.price_per_unit}</td>
+                <td>${row.price}</td>
                 <td>${row.total}</td>
             </tr>`;
         });

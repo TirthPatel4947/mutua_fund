@@ -63,6 +63,7 @@ Route::group(['middleware' => ['UserAccess']], function () {
 
 
     // Route to show the import form (named as 'import')
+    Route::post('/import', [ImportController::class, 'import'])->name('import');
     Route::get('/import', [ImportController::class, 'showImportPage'])->name('import.show');
     Route::post('/import/process', [ImportController::class, 'processImport'])->name('import.process');
     Route::post('/import-submit', [ImportController::class, 'submit'])->name('import.submit');
