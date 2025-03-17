@@ -68,7 +68,10 @@ Route::group(['middleware' => ['UserAccess']], function () {
     Route::post('/import/process', [ImportController::class, 'processImport'])->name('import.process');
     Route::post('/import-submit', [ImportController::class, 'submit'])->name('import.submit');
     Route::get('/import-list', [ImportController::class, 'list'])->name('import.list');
-    
+    Route::get('/fetch-options/{type}', [ImportController::class, 'fetchOptions']);
+    Route::post('/update-record', [ImportController::class, 'updateRecord']);
+
+
 
     // buy/sale report page
     Route::get('/report', [ReportController::class, 'index'])->name('report');
@@ -106,11 +109,10 @@ Route::group(['middleware' => ['UserAccess']], function () {
     // Route to store a new portfolio (Form Submission)
     Route::post('/portfolio', [PortfolioController::class, 'store'])->name('portfolio.store')->middleware('auth');
 
-// export file
-Route::get('/report/export-buy', [ReportExportController::class, 'exportBuy'])->name('report.export.buy');
-Route::get('/report/export-sell', [ReportExportController::class, 'exportSell'])->name('report.export.sell');
-Route::get('/report/export-combined', [ReportExportController::class, 'exportCombined'])->name('report.export.combined');
-
+    // export file
+    Route::get('/report/export-buy', [ReportExportController::class, 'exportBuy'])->name('report.export.buy');
+    Route::get('/report/export-sell', [ReportExportController::class, 'exportSell'])->name('report.export.sell');
+    Route::get('/report/export-combined', [ReportExportController::class, 'exportCombined'])->name('report.export.combined');
 });
 
 
@@ -119,10 +121,3 @@ Route::get('/report/export-combined', [ReportExportController::class, 'exportCom
 Route::get('/mutual-fund-store', [MutualFundMasterController::class, 'fetch_fund'])->name('mutual-fund-store');
 // api for nav
 Route::get('fetch-nav', [navcontroller::class, 'nav']);
-
-
-
-
-
-
-

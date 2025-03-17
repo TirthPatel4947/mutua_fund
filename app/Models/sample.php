@@ -17,7 +17,8 @@ class Sample extends Model
         'fundname_id',
         'date',
         'price',
-        'total'
+        'total',
+        'status'
     ];
 
     // Relationship with User model
