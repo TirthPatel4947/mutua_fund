@@ -18,7 +18,8 @@ class Sample extends Model
         'date',
         'price',
         'total',
-        'status'
+        'status',
+        'unit'
     ];
 
     // Relationship with User model

@@ -16,7 +16,8 @@ class BuyController
     public function index()
     {
         $user_id = auth()->id();
-        $funds = MutualFund_Master::all();
+        // $funds = MutualFund_Master::all();
+        $funds = array();
         $portfolios = Portfolio::where('user_id', $user_id)->get(); // Fetch user-specific portfolios
     
         return view('buy', compact('funds', 'portfolios')); // Pass portfolios to the view
@@ -27,7 +28,7 @@ class BuyController
     {
         $search = $request->input('search');
     
-        $funds = MutualFund_Master::where('fundname', 'LIKE', '%' . $search . '%')
+        $funds = MutualFund_Master::where('fundname', 'LIKE', $search . '%')
             ->get(['id', 'fundname']);
     
         // Convert to Select2-compatible format
@@ -64,32 +65,35 @@ class BuyController
     {
         // Validate the incoming request
         $validatedData = $request->validate([
-            'fundname_id' => 'required|exists:mutualfund_master,id', // Validate fundname_id
-            'portfolio_id' => 'required|exists:portfolios,id',  // Validate portfolio_id (Ensure it exists in the portfolios table)
+            'fundname_id' => 'required|exists:mutualfund_master,id',
+            'portfolio_id' => 'required|exists:portfolios,id',
             'date' => 'required|date',
             'totalprice' => 'required|numeric|min:0',
             'quantityofshare' => 'required|numeric|min:0',
+            'price_per_unit' => 'required|numeric|min:0', 
         ]);
+        
     
         try {
             // Get authenticated user's ID
-            $userId = auth()->id(); // Ensure user is authenticated
+            $userId = auth()->id(); 
     
             if (!$userId) {
                 return response()->json(['error' => 'User not authenticated.'], 401);
             }
     
-            // Store the report history with status = 1 and user ID
+            // Create the report history entry
             $reportHistory = ReportHistory::create([
-                'user_id' => $userId, // Store the authenticated user's ID
+                'user_id' => $userId,
                 'fundname_id' => $validatedData['fundname_id'],
-                'portfolio_id' => $validatedData['portfolio_id'], // Store the portfolio_id
+                'portfolio_id' => $validatedData['portfolio_id'],
                 'date' => $validatedData['date'],
                 'unit' => $validatedData['quantityofshare'],
-                'price' => $validatedData['totalprice'],
-                'total' => $validatedData['quantityofshare'] * $validatedData['totalprice'],
-                'status' => 1,
+                'price' => $validatedData['price_per_unit'], 
+                'total' => $validatedData['totalprice'], 
+                'status' => 1, 
             ]);
+            
     
             return response()->json(['message' => 'Fund purchase successfully saved!'], 200);
         } catch (\Exception $e) {

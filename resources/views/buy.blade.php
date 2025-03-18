@@ -248,29 +248,40 @@
             }
         }
 
-        $('#save-btn').on('click', function(e) {
-            e.preventDefault();
-            var formData = {
-                _token: '{{ csrf_token() }}',
-                portfolio_id: $('#portfolio_id').val(),
-                fundname_id: $('#fundname').val(),
-                date: $('#date').val(),
-                totalprice: $('#totalprice').val(),
-                quantityofshare: $('#quantityofshare').val(),
-                price_per_unit: $('#price_per_unit').val(),
-                portfolio_id: $('#portfolio').val()
-            };
-            $.ajax({
-                url: "{{ isset($buyData) ? route('report.update', $buyData->id) : route('buyFund.store') }}",
-                type: "{{ isset($buyData) ? 'PUT' : 'POST' }}",
-                data: formData,
-                success: function(response) {
-                    alert(response.message);
-                    window.location.href = "{{ route('dashboard') }}";
-                },
-                error: function() {
-                    alert("Failed to save the form data. Please try again.");
-                }
+        $(document).ready(function() {
+            $('#save-btn').on('click', function(e) {
+                e.preventDefault();
+
+                // Prepare form data
+                var formData = {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    portfolio_id: $('#portfolio').val(),
+                    fundname_id: $('#fundname').val(),
+                    date: $('#date').val(),
+                    totalprice: $('#totalprice').val(),
+                    quantityofshare: $('#quantityofshare').val(),
+                    price_per_unit: $('#price_per_unit').val() // ✅ Ensure this matches the backend validation
+                };
+
+                console.log("Form Data Sent:", formData);
+
+
+                $.ajax({
+                    url: "{{ isset($buyData) ? route('report.update', $buyData->id) : route('buyFund.store') }}",
+                    type: "{{ isset($buyData) ? 'PUT' : 'POST' }}",
+                    data: formData,
+                    success: function(response) {
+                        alert(response.message);
+                        window.location.href = "{{ route('dashboard') }}";
+                    },
+                    error: function(xhr) {
+                        var errorMessage = "Failed to save the form data. Please try again.";
+                        if (xhr.responseJSON && xhr.responseJSON.error) {
+                            errorMessage = xhr.responseJSON.error;
+                        }
+                        alert(errorMessage);
+                    }
+                });
             });
         });
     });

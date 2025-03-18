@@ -72,6 +72,7 @@ class FundImport implements ToModel, WithHeadingRow
             'portfolio_id'   => $portfolio ? $portfolio->id : null, 
             'fundname_id'    => $fund ? $fund->id : null, 
             'date'           => $formattedDate,
+            'unit'           => $row['unit'] ?? null,  // ✅ Added the 'unit' column
             'price'          => $price, // Ensure correct key name
             'total'          => $row['total'] ?? null,
             'status'         => $status, // Store status correctly

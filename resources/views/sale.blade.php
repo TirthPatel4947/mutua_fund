@@ -244,14 +244,16 @@
         $('#save-btn').on('click', function(e) {
             e.preventDefault();
             var formData = {
-                _token: '{{ csrf_token() }}',
-                portfolio_id: $('#portfolio').val(),
-                fundname_id: $('#fundname').val(),
-                date: $('#date').val(),
-                totalprice: $('#totalprice').val(),
-                quantityofshare: $('#quantityofshare').val(),
-                price_per_unit: $('#price_per_unit').val()
-            };
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    portfolio_id: $('#portfolio').val(),
+                    fundname_id: $('#fundname').val(),
+                    date: $('#date').val(),
+                    totalprice: $('#totalprice').val(),
+                    quantityofshare: $('#quantityofshare').val(),
+                    price_per_unit: $('#price_per_unit').val() // ✅ Ensure this matches the backend validation
+                };
+
+                console.log("Form Data Sent:", formData);
             $.ajax({
                 url: "{{ isset($saleData) ? route('report.sale.update', $saleData->id) : route('sale.store') }}",
                 type: "{{ isset($saleData) ? 'PUT' : 'POST' }}",

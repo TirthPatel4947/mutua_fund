@@ -14,16 +14,17 @@ class SaleController
     public function index()
     {
         $user_id = auth()->id(); // Get authenticated user ID
-        $funds = Sale::all(); // Fetch all sales (assuming this holds sale records)
+        //$funds = Sale::all(); // Fetch all sales (assuming this holds sale records)
+        $funds = array();
         $portfolios = Portfolio::where('user_id', $user_id)->get(); // Fetch only user-specific portfolios
-    
+
         return view('sale', compact('funds', 'portfolios')); // Pass portfolios to the view
     }
-    
+
     public function getFunds(Request $request)
     {
         $search = $request->input('search');
-        $funds = Sale::where('fundname', 'LIKE', '%' . $search . '%')->get(['id', 'fundname']);
+        $funds = Sale::where('fundname', 'LIKE',  $search . '%')->get(['id', 'fundname']);
         $formattedFunds = $funds->map(fn($fund) => ['id' => $fund->id, 'text' => $fund->fundname]);
         return response()->json(['results' => $formattedFunds]);
     }
@@ -39,11 +40,12 @@ class SaleController
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'portfolio_id' => 'required|exists:portfolios,id',
             'fundname_id' => 'required|exists:mutualfund_master,id',
+            'portfolio_id' => 'required|exists:portfolios,id',
             'date' => 'required|date',
             'totalprice' => 'required|numeric|min:0',
             'quantityofshare' => 'required|numeric|min:0',
+            'price_per_unit' => 'required|numeric|min:0',
         ]);
 
         try {
@@ -55,13 +57,13 @@ class SaleController
 
             ReportHistory::create([
                 'user_id' => $userId,
-                'portfolio_id' => $validatedData['portfolio_id'],
                 'fundname_id' => $validatedData['fundname_id'],
+                'portfolio_id' => $validatedData['portfolio_id'],
                 'date' => $validatedData['date'],
-                'unit' => -1 * $validatedData['quantityofshare'],
-                'price' => -1 * $validatedData['totalprice'],
-                'total' => -1 * $validatedData['quantityofshare'] * $validatedData['totalprice'],
-                'status' => 0,
+                'unit' => -1 * $validatedData['quantityofshare'], // Negative for sale
+                'price' => -1 * $validatedData['price_per_unit'], // Negative for sale
+                'total' => -1 * $validatedData['totalprice'], // Negative for sale
+                'status' => 0, // Sale
             ]);
 
             return response()->json(['message' => 'Fund sale successfully saved!'], 200);

@@ -10,7 +10,7 @@ use App\Models\Portfolio;
 use App\Models\MutualFund_Master;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log; 
-
+use Illuminate\Support\Facades\DB;
 
 class ImportController 
 {
@@ -49,19 +49,20 @@ class ImportController
     public function list()
     {
         $userId = Auth::id(); // Get the logged-in user ID
-
+    
         $data = Sample::with('portfolio', 'fund') // Include 'fund' to avoid optional() use later
             ->where('user_id', $userId) // Filter by authenticated user
             ->latest()
             ->take(50)
             ->get();
-
+    
         $formattedData = $data->map(function ($item) {
             return [
                 'id'          => $item->id,
                 'portfolio'   => $item->portfolio ? $item->portfolio->name : '',
                 'fund_name'   => $item->fund ? $item->fund->fundname : '',
                 'date'        => $item->date ?? '',
+                'unit'        => $item->unit ?? '', // ✅ Added Unit Column
                 'price'       => $item->price ?? '',
                 'total'       => $item->total ?? '',
                 'status'      => $item->status === 1 ? 'Buy' : 'Sale', 
@@ -69,10 +70,10 @@ class ImportController
                 'updated_at'  => $item->updated_at ?? '',
             ];
         });
-
+    
         return response()->json($formattedData);
     }
-
+    
     public function fetchOptions($type, Request $request)
     {
         $search = $request->query('search', '');
@@ -86,7 +87,7 @@ class ImportController
         } elseif ($type === 'fund_name') {
             $query = MutualFund_Master::select('id', 'fundname as name');
             if (!empty($search)) {
-                $query->where('fundname', 'LIKE', "%{$search}%"); // Apply search filter for fund names
+                $query->where('fundname', 'LIKE', $search . '%'); // Apply search filter for fund names
             }
         } else {
             return response()->json([]);
@@ -141,6 +142,64 @@ class ImportController
     }
     
     
+    public function storeReport(Request $request)
+    {
+        Log::info('Received Data:', $request->all()); // ✅ Log received request data
+    
+        $validatedData = $request->validate([
+            'report_data' => 'required|array',
+            'report_data.*.portfolio' => 'required|string',
+            'report_data.*.fund_name' => 'required|string',
+            'report_data.*.date' => 'required|date',
+            'report_data.*.unit' => 'required|numeric',
+            'report_data.*.price' => 'required|numeric',
+            'report_data.*.status' => 'required|string',
+        ]);
+    
+        Log::info('Validated Data:', $validatedData); // ✅ Log validated data
+    
+        // ✅ Begin database transaction
+        DB::beginTransaction();
+    
+        try {
+            // ✅ Insert data into report_history
+            DB::insert("
+                INSERT INTO report_history (user_id, portfolio_id, fundname_id, date, unit, price, total, status, created_at, updated_at)
+                SELECT 
+                    user_id, 
+                    portfolio_id, 
+                    fundname_id, 
+                    date, 
+                    unit * (status * 2 - 1),   -- ✅ Converts unit to negative if status = 0
+                    price * (status * 2 - 1),  -- ✅ Converts price to negative if status = 0
+                    total * (status * 2 - 1),  -- ✅ Converts total to negative if status = 0
+                    status, 
+                    NOW(), 
+                    NOW()
+                FROM sample
+                WHERE user_id = ?", [auth()->id()]
+            );
+    
+            // ✅ Delete the logged-in user's data from the sample table
+            DB::delete("DELETE FROM sample WHERE user_id = ?", [auth()->id()]);
+    
+            DB::commit(); // ✅ Commit transaction
+    
+            return response()->json([
+                'success' => true,
+                'message' => 'Data inserted successfully and deleted from sample table.',
+                'redirect_url' => route('dashboard')
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack(); // ❌ Rollback transaction on failure
+            Log::error('Error in storeReport: ' . $e->getMessage());
+    
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while processing data.'
+            ], 500);
+        }
+    }
     
     
     

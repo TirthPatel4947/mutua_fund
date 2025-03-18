@@ -62,7 +62,7 @@ Route::group(['middleware' => ['UserAccess']], function () {
     Route::post('/profile/avatar/remove', [UserController::class, 'removeAvatar'])->name('profile.avatar.remove');
 
 
-    // Route to show the import form (named as 'import')
+    // Route the import 
     Route::post('/import', [ImportController::class, 'import'])->name('import');
     Route::get('/import', [ImportController::class, 'showImportPage'])->name('import.show');
     Route::post('/import/process', [ImportController::class, 'processImport'])->name('import.process');
@@ -70,20 +70,20 @@ Route::group(['middleware' => ['UserAccess']], function () {
     Route::get('/import-list', [ImportController::class, 'list'])->name('import.list');
     Route::get('/fetch-options/{type}', [ImportController::class, 'fetchOptions']);
     Route::post('/update-record', [ImportController::class, 'updateRecord']);
+    Route::post('/report/store', [ImportController::class, 'storeReport'])->name('report.store');
 
 
 
     // buy/sale report page
     Route::get('/report', [ReportController::class, 'index'])->name('report');
-    Route::get('/report/buy', [ReportController::class, 'getBuyReports'])->name('report.buy');
-    Route::get('/report/sell', [ReportController::class, 'getSellReports'])->name('report.sell');
+    Route::get('/reports/data', [ReportController::class, 'getReports'])->name('reports.data');
     Route::delete('/report/delete/{id}', [ReportController::class, 'destroy'])->name('report.delete');
     Route::get('/report/edit/{id}', [ReportController::class, 'edit'])->name('report.edit');
     Route::put('/report/{id}', [ReportController::class, 'update'])->name('report.update');
     Route::put('/report/update/{id}', [ReportController::class, 'update'])->name('report.update');
     Route::get('/report/sale/edit/{id}', [ReportController::class, 'editSale'])->name('report.sale.edit');
     Route::put('/report/sale/update/{id}', [ReportController::class, 'updateSale'])->name('report.sale.update');
-    Route::get('/report/combined', [ReportController::class, 'combinedReport'])->name('report.combined');
+ 
 
 
     // buy fund
