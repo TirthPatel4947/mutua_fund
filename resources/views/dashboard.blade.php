@@ -35,7 +35,7 @@
                                     <i class="feather icon-dollar-sign font-large-2 text-primary"></i>
                                 </div>
                                 <h5 class="card-title text-muted">Current Value</h5>
-                                <h3 class="text-bold-600">₹{{ number_format($currentValue, 2) }}</h3>
+                                <h3 class="text-bold-600">₹{{ number_format($currentValue, ) }}</h3>
                             </div>
                         </div>
                     </div>
@@ -48,7 +48,7 @@
                                     <i class="feather icon-arrow-up font-large-2 text-danger"></i>
                                 </div>
                                 <h5 class="card-title text-muted">Investment Amount</h5>
-                                <h3 class="text-bold-600">₹{{ number_format($investmentAmount, 2) }}</h3>
+                                <h3 class="text-bold-600">₹{{ number_format($investmentAmount, ) }}</h3>
                             </div>
                         </div>
                     </div>

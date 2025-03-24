@@ -57,7 +57,7 @@
                                     <select id="fundname" class="form-control select2" name="fundname_id" required>
                                         <option value="">Select Fund</option>
                                         @foreach($funds as $fund)
-                                        <option value="{{ $fund->id }}" {{ isset($buyData) && $buyData->fundname_id == $fund->id ? 'selected' : '' }}>
+                                        <option value="{{ $fund->id }}" {{ old('fundname_id', $buyData->fundname_id ?? '') == $fund->id ? 'selected' : '' }}>
                                             {{ $fund->fundname }}
                                         </option>
                                         @endforeach
@@ -89,7 +89,11 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="fa fa-dollar-sign"></i></div>
                                     </div>
-                                    <input type="text" id="price_per_unit" class="form-control pl-5" placeholder="Price per unit" name="price_per_unit" value="{{ old('price_per_unit', isset($buyData) ? $buyData->price / ($buyData->unit ?: 1) : '') }}" required>
+                                    <input type="text" id="price_per_unit" class="form-control pl-5"
+                                        placeholder="Price per unit" name="price_per_unit"
+                                        value="{{ old('price_per_unit', isset($buyData) ? number_format($buyData->price, 2) : '') }}"
+                                        required>
+
                                 </div>
                             </div>
                             <small class="text-danger" id="price_per_unit-error"></small>
@@ -103,7 +107,7 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="fa fa-dollar-sign"></i></div>
                                     </div>
-                                    <input type="text" id="totalprice" class="form-control pl-5" placeholder="Buy amount" name="totalprice" value="{{ old('totalprice', $buyData->price ?? '') }}" required>
+                                    <input type="text" id="totalprice" class="form-control pl-5" placeholder="Buy amount" name="totalprice" value="{{ old('totalprice', $buyData->total ?? '') }}" required>
                                 </div>
                             </div>
                             <small class="text-danger" id="totalprice-error"></small>

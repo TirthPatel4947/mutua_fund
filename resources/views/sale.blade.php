@@ -54,7 +54,7 @@
                                     <select id="fundname" class="form-control select2" name="fundname_id" required>
                                         <option value="">Select Fund</option>
                                         @foreach($funds as $fund)
-                                        <option value="{{ $fund->id }}" {{ isset($saleData) && $saleData->fundname_id == $fund->id ? 'selected' : '' }}>
+                                        <option value="{{ $fund->id }}" {{ old('fundname_id', $saleData->fundname_id ?? '') == $fund->id ? 'selected' : '' }}>
                                             {{ $fund->fundname }}
                                         </option>
                                         @endforeach
@@ -86,7 +86,11 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="fa fa-dollar-sign"></i></div>
                                     </div>
-                                    <input type="text" id="price_per_unit" class="form-control pl-5" placeholder="Price per unit" name="price_per_unit" value="{{ old('price_per_unit', isset($saleData) ? $saleData->price / ($saleData->unit ?: 1) : '') }}" required>
+                                    <input type="text" id="price_per_unit" class="form-control pl-5"
+                                        placeholder="Price per unit" name="price_per_unit"
+                                        value="{{ old('price_per_unit', isset($saleData) ? number_format($saleData->price, 2) : '') }}"
+                                        required>
+
                                 </div>
                             </div>
                             <small class="text-danger" id="price_per_unit-error"></small>
@@ -100,7 +104,11 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text"><i class="fa fa-dollar-sign"></i></div>
                                     </div>
-                                    <input type="text" id="totalprice" class="form-control pl-5" placeholder="Sale amount" name="totalprice" value="{{ old('totalprice', $saleData->price ?? '') }}" required>
+                                    <input type="text" id="totalprice" class="form-control pl-5"
+                                        placeholder="Sale amount" name="totalprice"
+                                        value="{{ old('totalprice', isset($saleData) ? number_format($saleData->total, 2) : '') }}"
+                                        required>
+
                                 </div>
                             </div>
                             <small class="text-danger" id="totalprice-error"></small>
@@ -120,7 +128,7 @@
                             <small class="text-danger" id="quantityofshare-error"></small>
                         </div>
 
-                     
+
 
                     </div>
 
@@ -149,44 +157,48 @@
 
 <script>
     $(document).ready(function() {
-    // Initialize select2 for fund selection
-    $('#fundname').select2({
-        placeholder: "Search and select a fund",
-        allowClear: true,
-        minimumInputLength: 1,
-        ajax: {
-            url: "{{ route('sell.funds.search') }}",
-            dataType: 'json',
-            delay: 250,
-            data: function(params) {
-                return { search: params.term };
-            },
-            processResults: function(data) {
-                return { results: data.results }; // Correctly process response
-            },
-            cache: true
-        }
-    });
-      // Portfolio select2 initialization
-      $('#portfolio').select2({
-        placeholder: 'Select Portfolio',
-        ajax: {
-            url: '/get-portfolios',  // URL to the controller method
-            dataType: 'json',
-            delay: 250,  // Delay in ms to wait for input
-            data: function (params) {
-                return {
-                    search: params.term  // Send the search term to the backend
-                };
-            },
-            processResults: function (data) {
-                // Map the result into the format Select2 expects
-                return {
-                    results: data.results
-                };
+        // Initialize select2 for fund selection
+        $('#fundname').select2({
+            placeholder: "Search and select a fund",
+            allowClear: true,
+            minimumInputLength: 1,
+            ajax: {
+                url: "{{ route('sell.funds.search') }}",
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        search: params.term
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.results
+                    }; // Correctly process response
+                },
+                cache: true
             }
-        }
-    });
+        });
+        // Portfolio select2 initialization
+        $('#portfolio').select2({
+            placeholder: 'Select Portfolio',
+            ajax: {
+                url: '/get-portfolios', // URL to the controller method
+                dataType: 'json',
+                delay: 250, // Delay in ms to wait for input
+                data: function(params) {
+                    return {
+                        search: params.term // Send the search term to the backend
+                    };
+                },
+                processResults: function(data) {
+                    // Map the result into the format Select2 expects
+                    return {
+                        results: data.results
+                    };
+                }
+            }
+        });
 
         // Auto-fill price per unit when date or fund changes
         $('#date, #fundname').on('change', function() {
@@ -244,16 +256,14 @@
         $('#save-btn').on('click', function(e) {
             e.preventDefault();
             var formData = {
-                    _token: $('meta[name="csrf-token"]').attr('content'),
-                    portfolio_id: $('#portfolio').val(),
-                    fundname_id: $('#fundname').val(),
-                    date: $('#date').val(),
-                    totalprice: $('#totalprice').val(),
-                    quantityofshare: $('#quantityofshare').val(),
-                    price_per_unit: $('#price_per_unit').val() // ✅ Ensure this matches the backend validation
-                };
-
-                console.log("Form Data Sent:", formData);
+                _token: '{{ csrf_token() }}',
+                portfolio_id: $('#portfolio').val(),
+                fundname_id: $('#fundname').val(),
+                date: $('#date').val(),
+                totalprice: $('#totalprice').val(),
+                quantityofshare: $('#quantityofshare').val(),
+                price_per_unit: $('#price_per_unit').val()
+            };
             $.ajax({
                 url: "{{ isset($saleData) ? route('report.sale.update', $saleData->id) : route('sale.store') }}",
                 type: "{{ isset($saleData) ? 'PUT' : 'POST' }}",

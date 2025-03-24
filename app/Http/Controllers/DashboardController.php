@@ -16,7 +16,7 @@ class DashboardController
             ->select(
                 'fundname_id',
                 DB::raw('SUM(unit) as total_units'),
-                DB::raw('SUM(price) as total_investment')
+                DB::raw('SUM(total) as total_investment')
             )
             ->where('user_id', $userId) // Filter by user_id
             ->groupBy('fundname_id')
@@ -65,7 +65,7 @@ class DashboardController
 
         return view('dashboard', [
             'totalInvestment' => number_format($totalInvestment, 2, '.', ''),
-            'currentValue' => number_format($currentValue, 2, '.', ''),
+            'currentValue' => number_format(round($currentValue, 2), 0, '.', ''),
             'totalUnits' => number_format($totalUnits, 2, '.', ''),
             'profitOrLoss' => number_format($profitOrLoss, 2, '.', ''),
             'absoluteProfitOrLoss' => number_format($absoluteProfitOrLoss, 2, '.', ''),
@@ -81,7 +81,7 @@ class DashboardController
         if (request()->ajax()) {
             $userId = auth()->id(); // Get the authenticated user's ID
             $portfolioId = request()->get('portfolio_id'); // Get selected portfolio ID
-    
+
             $investmentQuery = DB::table('report_history')
                 ->select(
                     'fundname_id',
@@ -89,13 +89,13 @@ class DashboardController
                     DB::raw('SUM(price) as total_investment')
                 )
                 ->where('user_id', $userId); // Filter by user_id
-    
+
             if ($portfolioId && $portfolioId !== 'all') {
                 $investmentQuery->where('portfolio_id', $portfolioId); // Filter by portfolio_id if selected
             }
-    
+
             $investmentData = $investmentQuery->groupBy('fundname_id')->get();
-    
+
             $latestNavs = DB::table('mutual_nav_history as nav')
                 ->select('nav.fundname_id', 'nav.nav', 'nav.date')
                 ->whereIn('nav.fundname_id', $investmentData->pluck('fundname_id')->toArray())
@@ -106,7 +106,7 @@ class DashboardController
                 )')
                 ->get()
                 ->keyBy('fundname_id');
-    
+
             $fundDetails = [];
             foreach ($investmentData as $data) {
                 $units = (float)$data->total_units;
@@ -116,21 +116,21 @@ class DashboardController
                 $currentValue = $units * $lastNav;
                 $profitOrLoss = $currentValue - $investment;
                 $absoluteProfitOrLoss = abs($profitOrLoss);
-    
+
                 $formattedProfitOrLoss = $profitOrLoss > 0
                     ? '+' . number_format($profitOrLoss, 2)
                     : number_format($profitOrLoss, 2);
-    
+
                 $percentageGain = $investment > 0
                     ? (($currentValue - $investment) / $investment) * 100
                     : 0.0;
-    
+
                 $formattedPercentageGain = number_format($percentageGain, 2) . '%';
-    
+
                 $fundName = DB::table('mutualfund_master')
                     ->where('id', $data->fundname_id)
                     ->value('fundname');
-    
+
                 $fundDetails[] = [
                     'fund_name' => $fundName,
                     'total_units' => number_format($units, 2),
@@ -143,14 +143,14 @@ class DashboardController
                     'nav_date' => $lastNavDate
                 ];
             }
-    
+
             return DataTables::of($fundDetails)->make(true);
         }
-    
+
         $portfolios = DB::table('portfolios')->where('user_id', auth()->id())->get();
         return view('fund-details', compact('portfolios'));
     }
-// for chart 
+    // for chart 
     public function getInvestmentData()
     {
         $userId = auth()->id(); // Get authenticated user ID
@@ -158,7 +158,7 @@ class DashboardController
         // Fetch yearly investment data for the authenticated user
         // Fetch yearly investment (BUY) data for the authenticated user
         $yearlyInvestment = DB::table('report_history')
-            ->select(DB::raw('YEAR(date) as year'), DB::raw('SUM(price) as total_investment'))
+            ->select(DB::raw('YEAR(date) as year'), DB::raw('SUM(total) as total_investment'))
             ->where('user_id', $userId) // Filter by user_id
             ->where('status', 1) // Ensure only 'buy' transactions
             ->groupBy(DB::raw('YEAR(date)'))
@@ -171,7 +171,7 @@ class DashboardController
 
         // Fetch yearly sales data for the authenticated user
         $yearlySales = DB::table('report_history')
-            ->select(DB::raw('YEAR(date) as year'), DB::raw('SUM(price) as total_sales'))
+            ->select(DB::raw('YEAR(date) as year'), DB::raw('SUM(total) as total_sales'))
             ->where('status', '<>', 1) // Exclude status = 1
             ->where('user_id', $userId) // Filter by user_id
             ->groupBy(DB::raw('YEAR(date)'))
@@ -214,17 +214,15 @@ class DashboardController
                     SUM(CASE WHEN rh.status = 0 THEN rh.unit ELSE 0 END), 
                     0
                 ) AS current_units,
-                FORMAT(
+                ROUND(
                     (IFNULL(nh2.nav, 0) - IFNULL(nh1.nav, 0)) * 
                     IFNULL(
                         (SUM(CASE WHEN rh.status = 1 THEN rh.unit ELSE 0 END) - 
                          SUM(CASE WHEN rh.status = 0 THEN rh.unit ELSE 0 END)
                         ), 
                     0)
-                , 2) AS difference,
-                ROUND(
-                    IFNULL(((nh2.nav - nh1.nav) / nh1.nav) * 100, 0), 2
-                ) AS percentage_change   -- ✅ Percentage Calculation
+                , 0) AS difference,  -- ✅ Rounded to whole number
+                IFNULL(((nh2.nav - nh1.nav) / nh1.nav) * 100, 2) AS percentage_change -- ✅ Keeps decimal places
             FROM 
                 mutualfund_master AS mf
             LEFT JOIN 
@@ -256,9 +254,16 @@ class DashboardController
                 difference DESC
         ", ['user_id' => auth()->id()]);
     
+        // Convert 'difference' to integer for correct display
+        $funds = collect($funds)->map(function ($fund) {
+            $fund->difference = (int) $fund->difference; // ✅ Convert to integer
+            $fund->percentage_change = round($fund->percentage_change, 2); // ✅ Keep 2 decimal places
+            return $fund;
+        });
+    
         // Show Top 3 Gainers and Top 3 Losers
-        $topGainers = collect($funds)->where('difference', '>', 0)->sortByDesc('difference')->take(3)->values();
-        $topLosers = collect($funds)->where('difference', '<', 0)->sortBy('difference')->take(3)->values();
+        $topGainers = $funds->where('difference', '>', 0)->sortByDesc('difference')->take(3)->values();
+        $topLosers = $funds->where('difference', '<', 0)->sortBy('difference')->take(3)->values();
     
         return response()->json([
             'topGainers' => $topGainers,
@@ -266,11 +271,4 @@ class DashboardController
         ]);
     }
     
-    
-    
-    
-     
 }
-
-
-

@@ -61,7 +61,7 @@ class SaleController
                 'portfolio_id' => $validatedData['portfolio_id'],
                 'date' => $validatedData['date'],
                 'unit' => -1 * $validatedData['quantityofshare'], // Negative for sale
-                'price' => -1 * $validatedData['price_per_unit'], // Negative for sale
+                'price' => $validatedData['price_per_unit'], 
                 'total' => -1 * $validatedData['totalprice'], // Negative for sale
                 'status' => 0, // Sale
             ]);

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 use App\Models\MutualFund_Master;
 use App\Models\ReportHistory;
@@ -48,11 +47,10 @@ class ReportController
             ->addColumn('date', fn($report) => Carbon::parse($report->date)->format('Y-m-d'))
             ->addColumn('type', fn($report) => $report->unit > 0 ? 'Purchase' : 'Redemption')
             ->addColumn('quantity_of_shares', fn($report) => $report->unit)
-            ->addColumn('price_per_unit', fn($report) => '₹' . number_format($report->price, 2)) // ✅ Fetch price from DB directly
-            ->addColumn('total_price', fn($report) => '₹' . number_format($report->unit * $report->price, 2)) // ✅ Calculate total
+            ->addColumn('price_per_unit', fn($report) => '₹' . number_format($report->price, 2))
+            ->addColumn('total_price', fn($report) => '₹' . number_format($report->total, 2)) // ✅ Fetching from DB
             ->make(true);
     }
-    
 
     public function destroy($id)
     {
@@ -79,7 +77,7 @@ class ReportController
             return response()->json(['error' => 'Unauthorized or data not found.'], 403);
         }
         
-        $funds = MutualFund_Master::all();
+        $funds = MutualFund_Master::where('id', $buyData->fundname_id)->get();
         $portfolios = Portfolio::where('user_id', $userId)->get();
         
         return view('buy', compact('buyData', 'funds', 'portfolios'));
@@ -91,29 +89,39 @@ class ReportController
             'fundname_id' => 'required|exists:mutualfund_master,id',
             'portfolio_id' => 'required|exists:portfolios,id',
             'date' => 'required|date',
-            'totalprice' => 'required|numeric|min:0',
-            'quantityofshare' => 'required|numeric|min:0',
+            'quantityofshare' => 'required|numeric|min:0.0001',
+            'price_per_unit' => 'required|numeric|min:0',
         ]);
-
+    
         $userId = auth()->id();
         $buyRecord = ReportHistory::where('id', $id)->where('user_id', $userId)->first();
-
+    
         if (!$buyRecord) {
             return response()->json(['error' => 'Unauthorized or record not found.'], 403);
         }
-
+    
+        // ✅ Calculate total before updating
+        $total = $validatedData['quantityofshare'] * $validatedData['price_per_unit'];
+    
+        // ✅ Updating including `total`
         $buyRecord->update([
             'fundname_id' => $validatedData['fundname_id'],
             'portfolio_id' => $validatedData['portfolio_id'],
             'date' => $validatedData['date'],
             'unit' => $validatedData['quantityofshare'],
-            'price' => $validatedData['totalprice'],
-            'status' => 1,
+            'price' => $validatedData['price_per_unit'],
+            'total' => $total, // ✅ Manually updating total
         ]);
-        
-        return response()->json(['message' => 'Fund successfully updated!'], 200);
+    
+        return response()->json([
+            'message' => 'Fund successfully updated!',
+            'price_per_unit' => number_format($validatedData['price_per_unit'], 2),
+            'total' => number_format($total, 2),
+        ], 200);
     }
-    //edit sale 
+    
+    
+
     public function editSale($id)
     {
         $userId = auth()->id();
@@ -126,38 +134,43 @@ class ReportController
             return response()->json(['error' => 'Unauthorized or data not found.'], 403);
         }
     
-        $funds = MutualFund_Master::all();
+        $funds = MutualFund_Master::where('id', $saleData->fundname_id)->get();
         $portfolios = Portfolio::where('user_id', $userId)->get();
     
         return view('sale', compact('saleData', 'funds', 'portfolios'));
     }
-    // update sale 
+
     public function updateSale(Request $request, $id)
     {
         $validatedData = $request->validate([
             'fundname_id' => 'required|exists:mutualfund_master,id',
             'portfolio_id' => 'required|exists:portfolios,id',
             'date' => 'required|date',
-            'totalprice' => 'required|numeric|min:0',
-            'quantityofshare' => 'required|numeric|min:0',
+            'quantityofshare' => 'required|numeric|min:0.0001',
+            'price_per_unit' => 'required|numeric|min:0',
         ]);
-
+        $total = -($validatedData['quantityofshare'] * $validatedData['price_per_unit']);
         $userId = auth()->id();
-        $saleRecord = ReportHistory::where('id', $id)->where('user_id', $userId)->first();
-
-        if (!$saleRecord) {
+        $buyRecord = ReportHistory::where('id', $id)->where('user_id', $userId)->first();
+    
+        if (!$buyRecord) {
             return response()->json(['error' => 'Unauthorized or record not found.'], 403);
         }
-
-        $saleRecord->update([
+    
+        $buyRecord->update([
             'fundname_id' => $validatedData['fundname_id'],
             'portfolio_id' => $validatedData['portfolio_id'],
             'date' => $validatedData['date'],
-            'unit' => -abs($validatedData['quantityofshare']),
-            'price' => -abs($validatedData['totalprice']),
-            'status' => 0,
+            'unit' => -$validatedData['quantityofshare'], // Keeps unit negative for sales
+            'price' => $validatedData['price_per_unit'], 
+            'total' => $total, // Now total is also negative
         ]);
         
-        return response()->json(['message' => 'Sale successfully updated!'], 200);
+        
+        return response()->json([
+            'message' => 'Fund successfully updated!',
+            'price_per_unit' => number_format($validatedData['price_per_unit'], 2),
+            'total' => number_format($total, 2),
+        ], 200);
     }
 }
