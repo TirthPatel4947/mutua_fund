@@ -14,6 +14,13 @@ use App\Http\Controllers\navcontroller;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ReportExportController;
+use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\ResetPasswordController;
+
+// forget password 
+Route::post('/password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('/password/reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+Route::put('/password/reset', [ResetPasswordController::class, 'reset'])->name('password.reupdate');
 
 Route::get('/', function () {
     return view('welcome');
