@@ -16,12 +16,12 @@
                     </div>
 
                     <div class="col-6 text-right">
-    <a href="{{ route('import') }}">
-        <button class="btn btn-primary rounded-pill px-4 py-1">
-            <i class="feather icon-upload"></i> Import Excel
-        </button>
-    </a>
-</div>
+                        <a href="{{ route('import') }}">
+                            <button class="btn btn-primary rounded-pill px-4 py-1">
+                                <i class="feather icon-upload"></i> Import Excel
+                            </button>
+                        </a>
+                    </div>
 
                 </div>
 
@@ -141,8 +141,8 @@
 
                         // Reverse data for proper chronological order
                         const reversedYears = [...years].reverse();
-                        const reversedInvestmentValues = investmentValues.reverse().map(value => Number(value));
-                        const reversedSalesValues = salesValues.reverse().map(value => Number(value));
+                        const reversedInvestmentValues = investmentValues.reverse().map(value => Number(value.toFixed(2)));
+                        const reversedSalesValues = salesValues.reverse().map(value => Number(value.toFixed(2)));
 
                         document.getElementById('barChart').innerHTML = ""; // Ensure chart refresh
 
@@ -172,12 +172,16 @@
                                     text: 'Value (INR)'
                                 },
                                 labels: {
-                                    formatter: val => val.toLocaleString()
+                                    formatter: val => val.toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    })
                                 }
                             },
                             colors: ['#4CAF50', '#FF7043'], // Green for Buy, Red for Sell
                             dataLabels: {
-                                enabled: true
+                                enabled: true,
+                                formatter: val => val.toFixed(2) // Ensures data labels show 2 decimal places
                             },
                             plotOptions: {
                                 bar: {
@@ -256,55 +260,55 @@
 
                     <div class="card-content">
                         <div class="card-body">
-                         <div class="row">
-    <!-- Top Gainers -->
-    <div class="col-md-6 d-flex">
-        <div class="rounded shadow-sm p-3 w-100"
-            style="background: linear-gradient(135deg, #e0f7e9, #b2d8b2); border-left: 5px solid #28a745; min-height: 150px;">
-            <h5 class="text-success font-weight-bold mb-3">📈 Top Gainers</h5>
-            <div id="topGainers"></div>
-        </div>
-    </div>
+                            <div class="row">
+                                <!-- Top Gainers -->
+                                <div class="col-md-6 d-flex">
+                                    <div class="rounded shadow-sm p-3 w-100"
+                                        style="background: linear-gradient(135deg, #e0f7e9, #b2d8b2); border-left: 5px solid #28a745; min-height: 150px;">
+                                        <h5 class="text-success font-weight-bold mb-3">📈 Top Gainers</h5>
+                                        <div id="topGainers"></div>
+                                    </div>
+                                </div>
 
-    <!-- Top Losers -->
-    <div class="col-md-6 d-flex">
-        <div class="rounded shadow-sm p-3 w-100"
-            style="background: linear-gradient(135deg, #fdecea, #f5c6cb); border-left: 5px solid #dc3545; min-height: 150px;">
-            <h5 class="text-danger font-weight-bold mb-3">📉 Top Losers</h5>
-            <div id="topLosers"></div>
-        </div>
-    </div>
-</div>
-
+                                <!-- Top Losers -->
+                                <div class="col-md-6 d-flex">
+                                    <div class="rounded shadow-sm p-3 w-100"
+                                        style="background: linear-gradient(135deg, #fdecea, #f5c6cb); border-left: 5px solid #dc3545; min-height: 150px;">
+                                        <h5 class="text-danger font-weight-bold mb-3">📉 Top Losers</h5>
+                                        <div id="topLosers"></div>
+                                    </div>
+                                </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <script>
-$(document).ready(function () {
-    $.ajax({
-        url: "{{ route('fetch.top.data') }}",  // Replace with your route
-        method: "GET",
-        success: function (response) {
-            renderFunds("#topGainers", response.topGainers, "green");
-            renderFunds("#topLosers", response.topLosers, "red");
-        },
-        error: function (error) {
-            console.error("Error fetching data:", error);
-        }
-    });
+    <script>
+        $(document).ready(function() {
+            $.ajax({
+                url: "{{ route('fetch.top.data') }}", // Replace with your route
+                method: "GET",
+                success: function(response) {
+                    renderFunds("#topGainers", response.topGainers, "green");
+                    renderFunds("#topLosers", response.topLosers, "red");
+                },
+                error: function(error) {
+                    console.error("Error fetching data:", error);
+                }
+            });
 
-    function renderFunds(containerId, funds, color) {
-        let html = "";
-        if (funds.length > 0) {
-            funds.forEach(fund => {
-                const sign = fund.difference >= 0 ? "+" : "-";
-                const textColor = fund.difference >= 0 ? "green" : "red";
+            function renderFunds(containerId, funds, color) {
+                let html = "";
+                if (funds.length > 0) {
+                    funds.forEach(fund => {
+                        const sign = fund.difference >= 0 ? "+" : "-";
+                        const textColor = fund.difference >= 0 ? "green" : "red";
 
-                html += `
+                        html += `
                     <div class="d-flex justify-content-between align-items-center py-1">
                         <div class="text-left">
                             <strong>${fund.fundname}</strong>
@@ -315,278 +319,278 @@ $(document).ready(function () {
                     </div>
                     <hr class="my-1" style="border-top: 1px dashed #aaa;"> <!-- Separator Line -->
                 `;
-            });
-        } else {
-            html = `<p class="text-muted">No data available</p>`;
-        }
-        $(containerId).html(html);
-    }
-});
-</script>
+                    });
+                } else {
+                    html = `<p class="text-muted">No data available</p>`;
+                }
+                $(containerId).html(html);
+            }
+        });
+    </script>
 
 
 
-        <!-- <!detials in table -->
-        <!-- Mutual Fund Ads Section -->
-        <div class="row match-height">
-            <!-- Zerodha Ad -->
-            <div class="col-xl-4 col-lg-12">
-                <div class="card bg-gradient-x-danger">
-                    <div class="card-content">
-                        <div class="card-body text-center">
-                            <img src="{{ asset('assets/images/zerodha-banner.jpg') }}" alt="Zerodha Mutual Fund" class="img-fluid">
+    <!-- <!detials in table -->
+    <!-- Mutual Fund Ads Section -->
+    <div class="row match-height">
+        <!-- Zerodha Ad -->
+        <div class="col-xl-4 col-lg-12">
+            <div class="card bg-gradient-x-danger">
+                <div class="card-content">
+                    <div class="card-body text-center">
+                        <img src="{{ asset('assets/images/zerodha-banner.jpg') }}" alt="Zerodha Mutual Fund" class="img-fluid">
 
 
-                            <h4 class="white mt-2">Invest Smart with Zerodha</h4>
-                            <p class="white">Start investing in mutual funds with zero commission.</p>
-                            <a href="https://zerodha.com/mutualfunds/" class="btn btn-black">Learn More</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Mutual Fund Tips -->
-            <div class="col-xl-4 col-lg-12">
-                <div class="card bg-gradient-x-info white">
-                    <div class="card-content">
-                        <div class="card-body text-center">
-                            <i class="fa fa-line-chart font-large-2"></i>
-                            <div class="investment-tips-slider">
-                                <ul>
-                                    <li>"SIP is the best way to create long-term wealth. Start today!"</li>
-                                    <li>"Diversify your portfolio to reduce risk and maximize returns."</li>
-                                    <li>"Check expense ratios before choosing a mutual fund."</li>
-                                    <li>"Long-term investment beats market timing. Stay invested!"</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Fund Performance Highlights -->
-            <div class="col-xl-4 col-lg-12">
-                <div class="card bg-gradient-x-primary white">
-                    <div class="card-content">
-                        <div class="card-body text-center">
-                            <i class="fa fa-bar-chart font-large-2"></i>
-                            <div class="fund-performance-slider">
-                                <ul>
-                                    <li>"Axis Bluechip Fund: 12% CAGR over 5 years!"</li>
-                                    <li>"Mirae Asset Emerging Bluechip Fund: High growth potential!"</li>
-                                    <li>"Best ELSS funds for tax saving: Invest before March 31!"</li>
-                                    <li>"HDFC Mid-Cap Opportunities Fund: 15% CAGR over 10 years!"</li>
-                                </ul>
-                            </div>
-                        </div>
+                        <h4 class="white mt-2">Invest Smart with Zerodha</h4>
+                        <p class="white">Start investing in mutual funds with zero commission.</p>
+                        <a href="https://zerodha.com/mutualfunds/" class="btn btn-black">Learn More</a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!--/ Social & Weather -->
-        <!-- Basic Horizontal Timeline -->
-        <div class="row match-height">
-            <div class="col-xl-8 col-lg-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h4 class="card-title">Horizontal Timeline</h4>
-                        <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
-                        <div class="heading-elements">
-                            <ul class="list-inline mb-0">
-                                <li><a data-action="reload"><i class="feather icon-rotate-cw"></i></a></li>
+        <!-- Mutual Fund Tips -->
+        <div class="col-xl-4 col-lg-12">
+            <div class="card bg-gradient-x-info white">
+                <div class="card-content">
+                    <div class="card-body text-center">
+                        <i class="fa fa-line-chart font-large-2"></i>
+                        <div class="investment-tips-slider">
+                            <ul>
+                                <li>"SIP is the best way to create long-term wealth. Start today!"</li>
+                                <li>"Diversify your portfolio to reduce risk and maximize returns."</li>
+                                <li>"Check expense ratios before choosing a mutual fund."</li>
+                                <li>"Long-term investment beats market timing. Stay invested!"</li>
                             </ul>
                         </div>
                     </div>
-                    <div class="card-content">
-                        <div class="card-body">
-                            <div class="card-text">
-                                <section class="cd-horizontal-timeline">
-                                    <div class="timeline">
-                                        <div class="events-wrapper">
-                                            <div class="events">
-                                                <ol>
-                                                    <li><a href="#0" data-date="16/01/2015" class="selected">16 Jan</a></li>
-                                                    <li><a href="#0" data-date="28/02/2015">28 Feb</a></li>
-                                                    <li><a href="#0" data-date="20/04/2015">20 Mar</a></li>
-                                                    <li><a href="#0" data-date="20/05/2015">20 May</a></li>
-                                                    <li><a href="#0" data-date="09/07/2015">09 Jul</a></li>
-                                                    <li><a href="#0" data-date="30/08/2015">30 Aug</a></li>
-                                                    <li><a href="#0" data-date="15/09/2015">15 Sep</a></li>
-                                                </ol>
-                                                <span class="filling-line" aria-hidden="true"></span>
-                                            </div>
-                                            <!-- .events -->
-                                        </div>
-                                        <!-- .events-wrapper -->
-                                        <ul class="cd-timeline-navigation">
-                                            <li><a href="#0" class="prev inactive">Prev</a></li>
-                                            <li><a href="#0" class="next">Next</a></li>
-                                        </ul>
-                                        <!-- .cd-timeline-navigation -->
-                                    </div>
-                                    <!-- .timeline -->
-                                    <div class="events-content">
-                                        <ol>
-                                            <li class="selected" data-date="16/01/2015">
-                                                <blockquote class="blockquote border-0">
-                                                    <div class="media">
-                                                        <div class="media-left">
-                                                            <img class="media-object img-xl mr-1" src="../../../app-assets/images/portrait/small/avatar-s-5.png" alt="Generic placeholder image">
-                                                        </div>
-                                                        <div class="media-body">
-                                                            Sometimes life is going to hit you in the head with a brick. Don't lose faith.
-                                                        </div>
-                                                    </div>
-                                                    <footer class="blockquote-footer text-right">Steve Jobs
-                                                        <cite title="Source Title">Entrepreneur</cite>
-                                                    </footer>
-                                                </blockquote>
-                                                <p class="lead mt-2">
-                                                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Illum praesentium officia, fugit recusandae ipsa, quia velit nulla adipisci? Consequuntur aspernatur at.
-                                                </p>
-                                            </li>
-                                            <li data-date="28/02/2015">
-                                                <blockquote class="blockquote border-0">
-                                                    <div class="media">
-                                                        <div class="media-left">
-                                                            <img class="media-object img-xl mr-1" src="../../../app-assets/images/portrait/small/avatar-s-6.png" alt="Generic placeholder image">
-                                                        </div>
-                                                        <div class="media-body">
-                                                            Sometimes life is going to hit you in the head with a brick. Don't lose faith.
-                                                        </div>
-                                                    </div>
-                                                    <footer class="blockquote-footer text-right">Steve Jobs
-                                                        <cite title="Source Title">Entrepreneur</cite>
-                                                    </footer>
-                                                </blockquote>
-                                                <p class="lead mt-2">
-                                                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Illum praesentium officia, fugit recusandae ipsa, quia velit nulla adipisci? Consequuntur aspernatur at.
-                                                </p>
-                                            </li>
-                                            <li data-date="20/04/2015">
-                                                <blockquote class="blockquote border-0">
-                                                    <div class="media">
-                                                        <div class="media-left">
-                                                            <img class="media-object img-xl mr-1" src="../../../app-assets/images/portrait/small/avatar-s-7.png" alt="Generic placeholder image">
-                                                        </div>
-                                                        <div class="media-body">
-                                                            Sometimes life is going to hit you in the head with a brick. Don't lose faith.
-                                                        </div>
-                                                    </div>
-                                                    <footer class="blockquote-footer text-right">Steve Jobs
-                                                        <cite title="Source Title">Entrepreneur</cite>
-                                                    </footer>
-                                                </blockquote>
-                                                <p class="lead mt-2">
-                                                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Illum praesentium officia, fugit recusandae ipsa, quia velit nulla adipisci? Consequuntur aspernatur at.
-                                                </p>
-                                            </li>
-                                            <li data-date="20/05/2015">
-                                                <blockquote class="blockquote border-0">
-                                                    <div class="media">
-                                                        <div class="media-left">
-                                                            <img class="media-object img-xl mr-1" src="../../../app-assets/images/portrait/small/avatar-s-8.png" alt="Generic placeholder image">
-                                                        </div>
-                                                        <div class="media-body">
-                                                            Sometimes life is going to hit you in the head with a brick. Don't lose faith.
-                                                        </div>
-                                                    </div>
-                                                    <footer class="blockquote-footer text-right">Steve Jobs
-                                                        <cite title="Source Title">Entrepreneur</cite>
-                                                    </footer>
-                                                </blockquote>
-                                                <p class="lead mt-2">
-                                                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Illum praesentium officia, fugit recusandae ipsa, quia velit nulla adipisci? Consequuntur aspernatur at.
-                                                </p>
-                                            </li>
-                                            <li data-date="09/07/2015">
-                                                <blockquote class="blockquote border-0">
-                                                    <div class="media">
-                                                        <div class="media-left">
-                                                            <img class="media-object img-xl mr-1" src="../../../app-assets/images/portrait/small/avatar-s-9.png" alt="Generic placeholder image">
-                                                        </div>
-                                                        <div class="media-body">
-                                                            Sometimes life is going to hit you in the head with a brick. Don't lose faith.
-                                                        </div>
-                                                    </div>
-                                                    <footer class="blockquote-footer text-right">Steve Jobs
-                                                        <cite title="Source Title">Entrepreneur</cite>
-                                                    </footer>
-                                                </blockquote>
-                                                <p class="lead mt-2">
-                                                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Illum praesentium officia, fugit recusandae ipsa, quia velit nulla adipisci? Consequuntur aspernatur at.
-                                                </p>
-                                            </li>
-                                            <li data-date="30/08/2015">
-                                                <blockquote class="blockquote border-0">
-                                                    <div class="media">
-                                                        <div class="media-left">
-                                                            <img class="media-object img-xl mr-1" src="../../../app-assets/images/portrait/small/avatar-s-6.png" alt="Generic placeholder image">
-                                                        </div>
-                                                        <div class="media-body">
-                                                            Sometimes life is going to hit you in the head with a brick. Don't lose faith.
-                                                        </div>
-                                                    </div>
-                                                    <footer class="blockquote-footer text-right">Steve Jobs
-                                                        <cite title="Source Title">Entrepreneur</cite>
-                                                    </footer>
-                                                </blockquote>
-                                                <p class="lead mt-2">
-                                                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Illum praesentium officia, fugit recusandae ipsa, quia velit nulla adipisci? Consequuntur aspernatur at.
-                                                </p>
-                                            </li>
-                                            <li data-date="15/09/2015">
-                                                <blockquote class="blockquote border-0">
-                                                    <div class="media">
-                                                        <div class="media-left">
-                                                            <img class="media-object img-xl mr-1" src="../../../app-assets/images/portrait/small/avatar-s-7.png" alt="Generic placeholder image">
-                                                        </div>
-                                                        <div class="media-body">
-                                                            Sometimes life is going to hit you in the head with a brick. Don't lose faith.
-                                                        </div>
-                                                    </div>
-                                                    <footer class="blockquote-footer text-right">Steve Jobs
-                                                        <cite title="Source Title">Entrepreneur</cite>
-                                                    </footer>
-                                                </blockquote>
-                                                <p class="lead mt-2">
-                                                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Illum praesentium officia, fugit recusandae ipsa, quia velit nulla adipisci? Consequuntur aspernatur at.
-                                                </p>
-                                            </li>
-                                        </ol>
-                                    </div>
-                                    <!-- .events-content -->
-                                </section>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
-            <div class="col-xl-4 col-lg-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h4 class="card-title">Basic Card</h4>
-                    </div>
-                    <div class="card-content">
-                        <img class="img-fluid" src="../../../app-assets/images/carousel/06.jpg" alt="Card image cap">
-                        <div class="card-body">
-                            <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                            <a href="#" class="card-link">Card link</a>
-                            <a href="#" class="card-link">Another link</a>
+        </div>
+
+        <!-- Fund Performance Highlights -->
+        <div class="col-xl-4 col-lg-12">
+            <div class="card bg-gradient-x-primary white">
+                <div class="card-content">
+                    <div class="card-body text-center">
+                        <i class="fa fa-bar-chart font-large-2"></i>
+                        <div class="fund-performance-slider">
+                            <ul>
+                                <li>"Axis Bluechip Fund: 12% CAGR over 5 years!"</li>
+                                <li>"Mirae Asset Emerging Bluechip Fund: High growth potential!"</li>
+                                <li>"Best ELSS funds for tax saving: Invest before March 31!"</li>
+                                <li>"HDFC Mid-Cap Opportunities Fund: 15% CAGR over 10 years!"</li>
+                            </ul>
                         </div>
-                    </div>
-                    <div class="card-footer border-top-blue-grey border-top-lighten-5 text-muted">
-                        <span class="float-left">3 hours ago</span>
-                        <span class="float-right">
-                            <a href="#" class="card-link">Read More <i class="fa fa-angle-right"></i></a>
-                        </span>
                     </div>
                 </div>
             </div>
         </div>
-        <!--/ Basic Horizontal Timeline -->
-
     </div>
+
+    <!--/ Social & Weather -->
+    <!-- Basic Horizontal Timeline -->
+    <div class="row match-height">
+        <div class="col-xl-8 col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Horizontal Timeline</h4>
+                    <a class="heading-elements-toggle"><i class="fa fa-ellipsis-v font-medium-3"></i></a>
+                    <div class="heading-elements">
+                        <ul class="list-inline mb-0">
+                            <li><a data-action="reload"><i class="feather icon-rotate-cw"></i></a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-body">
+                        <div class="card-text">
+                            <section class="cd-horizontal-timeline">
+                                <div class="timeline">
+                                    <div class="events-wrapper">
+                                        <div class="events">
+                                            <ol>
+                                                <li><a href="#0" data-date="16/01/2015" class="selected">16 Jan</a></li>
+                                                <li><a href="#0" data-date="28/02/2015">28 Feb</a></li>
+                                                <li><a href="#0" data-date="20/04/2015">20 Mar</a></li>
+                                                <li><a href="#0" data-date="20/05/2015">20 May</a></li>
+                                                <li><a href="#0" data-date="09/07/2015">09 Jul</a></li>
+                                                <li><a href="#0" data-date="30/08/2015">30 Aug</a></li>
+                                                <li><a href="#0" data-date="15/09/2015">15 Sep</a></li>
+                                            </ol>
+                                            <span class="filling-line" aria-hidden="true"></span>
+                                        </div>
+                                        <!-- .events -->
+                                    </div>
+                                    <!-- .events-wrapper -->
+                                    <ul class="cd-timeline-navigation">
+                                        <li><a href="#0" class="prev inactive">Prev</a></li>
+                                        <li><a href="#0" class="next">Next</a></li>
+                                    </ul>
+                                    <!-- .cd-timeline-navigation -->
+                                </div>
+                                <!-- .timeline -->
+                                <div class="events-content">
+                                    <ol>
+                                        <li class="selected" data-date="16/01/2015">
+                                            <blockquote class="blockquote border-0">
+                                                <div class="media">
+                                                    <div class="media-left">
+                                                        <img class="media-object img-xl mr-1" src="../../../app-assets/images/portrait/small/avatar-s-5.png" alt="Generic placeholder image">
+                                                    </div>
+                                                    <div class="media-body">
+                                                        Sometimes life is going to hit you in the head with a brick. Don't lose faith.
+                                                    </div>
+                                                </div>
+                                                <footer class="blockquote-footer text-right">Steve Jobs
+                                                    <cite title="Source Title">Entrepreneur</cite>
+                                                </footer>
+                                            </blockquote>
+                                            <p class="lead mt-2">
+                                                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Illum praesentium officia, fugit recusandae ipsa, quia velit nulla adipisci? Consequuntur aspernatur at.
+                                            </p>
+                                        </li>
+                                        <li data-date="28/02/2015">
+                                            <blockquote class="blockquote border-0">
+                                                <div class="media">
+                                                    <div class="media-left">
+                                                        <img class="media-object img-xl mr-1" src="../../../app-assets/images/portrait/small/avatar-s-6.png" alt="Generic placeholder image">
+                                                    </div>
+                                                    <div class="media-body">
+                                                        Sometimes life is going to hit you in the head with a brick. Don't lose faith.
+                                                    </div>
+                                                </div>
+                                                <footer class="blockquote-footer text-right">Steve Jobs
+                                                    <cite title="Source Title">Entrepreneur</cite>
+                                                </footer>
+                                            </blockquote>
+                                            <p class="lead mt-2">
+                                                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Illum praesentium officia, fugit recusandae ipsa, quia velit nulla adipisci? Consequuntur aspernatur at.
+                                            </p>
+                                        </li>
+                                        <li data-date="20/04/2015">
+                                            <blockquote class="blockquote border-0">
+                                                <div class="media">
+                                                    <div class="media-left">
+                                                        <img class="media-object img-xl mr-1" src="../../../app-assets/images/portrait/small/avatar-s-7.png" alt="Generic placeholder image">
+                                                    </div>
+                                                    <div class="media-body">
+                                                        Sometimes life is going to hit you in the head with a brick. Don't lose faith.
+                                                    </div>
+                                                </div>
+                                                <footer class="blockquote-footer text-right">Steve Jobs
+                                                    <cite title="Source Title">Entrepreneur</cite>
+                                                </footer>
+                                            </blockquote>
+                                            <p class="lead mt-2">
+                                                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Illum praesentium officia, fugit recusandae ipsa, quia velit nulla adipisci? Consequuntur aspernatur at.
+                                            </p>
+                                        </li>
+                                        <li data-date="20/05/2015">
+                                            <blockquote class="blockquote border-0">
+                                                <div class="media">
+                                                    <div class="media-left">
+                                                        <img class="media-object img-xl mr-1" src="../../../app-assets/images/portrait/small/avatar-s-8.png" alt="Generic placeholder image">
+                                                    </div>
+                                                    <div class="media-body">
+                                                        Sometimes life is going to hit you in the head with a brick. Don't lose faith.
+                                                    </div>
+                                                </div>
+                                                <footer class="blockquote-footer text-right">Steve Jobs
+                                                    <cite title="Source Title">Entrepreneur</cite>
+                                                </footer>
+                                            </blockquote>
+                                            <p class="lead mt-2">
+                                                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Illum praesentium officia, fugit recusandae ipsa, quia velit nulla adipisci? Consequuntur aspernatur at.
+                                            </p>
+                                        </li>
+                                        <li data-date="09/07/2015">
+                                            <blockquote class="blockquote border-0">
+                                                <div class="media">
+                                                    <div class="media-left">
+                                                        <img class="media-object img-xl mr-1" src="../../../app-assets/images/portrait/small/avatar-s-9.png" alt="Generic placeholder image">
+                                                    </div>
+                                                    <div class="media-body">
+                                                        Sometimes life is going to hit you in the head with a brick. Don't lose faith.
+                                                    </div>
+                                                </div>
+                                                <footer class="blockquote-footer text-right">Steve Jobs
+                                                    <cite title="Source Title">Entrepreneur</cite>
+                                                </footer>
+                                            </blockquote>
+                                            <p class="lead mt-2">
+                                                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Illum praesentium officia, fugit recusandae ipsa, quia velit nulla adipisci? Consequuntur aspernatur at.
+                                            </p>
+                                        </li>
+                                        <li data-date="30/08/2015">
+                                            <blockquote class="blockquote border-0">
+                                                <div class="media">
+                                                    <div class="media-left">
+                                                        <img class="media-object img-xl mr-1" src="../../../app-assets/images/portrait/small/avatar-s-6.png" alt="Generic placeholder image">
+                                                    </div>
+                                                    <div class="media-body">
+                                                        Sometimes life is going to hit you in the head with a brick. Don't lose faith.
+                                                    </div>
+                                                </div>
+                                                <footer class="blockquote-footer text-right">Steve Jobs
+                                                    <cite title="Source Title">Entrepreneur</cite>
+                                                </footer>
+                                            </blockquote>
+                                            <p class="lead mt-2">
+                                                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Illum praesentium officia, fugit recusandae ipsa, quia velit nulla adipisci? Consequuntur aspernatur at.
+                                            </p>
+                                        </li>
+                                        <li data-date="15/09/2015">
+                                            <blockquote class="blockquote border-0">
+                                                <div class="media">
+                                                    <div class="media-left">
+                                                        <img class="media-object img-xl mr-1" src="../../../app-assets/images/portrait/small/avatar-s-7.png" alt="Generic placeholder image">
+                                                    </div>
+                                                    <div class="media-body">
+                                                        Sometimes life is going to hit you in the head with a brick. Don't lose faith.
+                                                    </div>
+                                                </div>
+                                                <footer class="blockquote-footer text-right">Steve Jobs
+                                                    <cite title="Source Title">Entrepreneur</cite>
+                                                </footer>
+                                            </blockquote>
+                                            <p class="lead mt-2">
+                                                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Illum praesentium officia, fugit recusandae ipsa, quia velit nulla adipisci? Consequuntur aspernatur at.
+                                            </p>
+                                        </li>
+                                    </ol>
+                                </div>
+                                <!-- .events-content -->
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Basic Card</h4>
+                </div>
+                <div class="card-content">
+                    <img class="img-fluid" src="../../../app-assets/images/carousel/06.jpg" alt="Card image cap">
+                    <div class="card-body">
+                        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                        <a href="#" class="card-link">Card link</a>
+                        <a href="#" class="card-link">Another link</a>
+                    </div>
+                </div>
+                <div class="card-footer border-top-blue-grey border-top-lighten-5 text-muted">
+                    <span class="float-left">3 hours ago</span>
+                    <span class="float-right">
+                        <a href="#" class="card-link">Read More <i class="fa fa-angle-right"></i></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--/ Basic Horizontal Timeline -->
+
+</div>
 </div>
 @endsection

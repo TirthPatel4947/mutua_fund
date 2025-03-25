@@ -79,77 +79,68 @@ class DashboardController
     public function fundDetails()
     {
         if (request()->ajax()) {
-            $userId = auth()->id(); // Get the authenticated user's ID
-            $portfolioId = request()->get('portfolio_id'); // Get selected portfolio ID
-
+            $userId = auth()->id(); 
+            $portfolioId = request()->get('portfolio_id');
+    
+            // Fetch total investment per fund with NAV at purchase time
             $investmentQuery = DB::table('report_history')
                 ->select(
                     'fundname_id',
                     DB::raw('SUM(unit) as total_units'),
-                    DB::raw('SUM(price) as total_investment')
+                    DB::raw('SUM(total) as total_cost'),
+                    DB::raw('SUM(unit * price) / SUM(unit) as cost_per_unit') // Weighted average cost per unit
                 )
-                ->where('user_id', $userId); // Filter by user_id
-
+                ->where('user_id', $userId);
+    
             if ($portfolioId && $portfolioId !== 'all') {
-                $investmentQuery->where('portfolio_id', $portfolioId); // Filter by portfolio_id if selected
+                $investmentQuery->where('portfolio_id', $portfolioId);
             }
-
+    
             $investmentData = $investmentQuery->groupBy('fundname_id')->get();
-
+    
+            // Fetch latest NAVs
             $latestNavs = DB::table('mutual_nav_history as nav')
                 ->select('nav.fundname_id', 'nav.nav', 'nav.date')
                 ->whereIn('nav.fundname_id', $investmentData->pluck('fundname_id')->toArray())
-                ->whereRaw('nav.date = (
-                    SELECT MAX(date) 
-                    FROM mutual_nav_history 
-                    WHERE fundname_id = nav.fundname_id
-                )')
+                ->whereRaw('nav.date = (SELECT MAX(date) FROM mutual_nav_history WHERE fundname_id = nav.fundname_id)')
                 ->get()
                 ->keyBy('fundname_id');
-
+    
             $fundDetails = [];
             foreach ($investmentData as $data) {
                 $units = (float)$data->total_units;
-                $investment = (float)$data->total_investment;
+                $investment = (float)$data->total_cost;
+                $costPerUnit = (float)$data->cost_per_unit; // Now correctly computed from NAV at investment time
                 $lastNav = isset($latestNavs[$data->fundname_id]) ? (float)$latestNavs[$data->fundname_id]->nav : 0.0;
                 $lastNavDate = isset($latestNavs[$data->fundname_id]) ? $latestNavs[$data->fundname_id]->date : 'N/A';
                 $currentValue = $units * $lastNav;
-                $profitOrLoss = $currentValue - $investment;
-                $absoluteProfitOrLoss = abs($profitOrLoss);
-
-                $formattedProfitOrLoss = $profitOrLoss > 0
-                    ? '+' . number_format($profitOrLoss, 2)
-                    : number_format($profitOrLoss, 2);
-
-                $percentageGain = $investment > 0
-                    ? (($currentValue - $investment) / $investment) * 100
-                    : 0.0;
-
-                $formattedPercentageGain = number_format($percentageGain, 2) . '%';
-
+                $percentageGain = $investment > 0 ? (($currentValue - $investment) / $investment) * 100 : 0.0;
+    
                 $fundName = DB::table('mutualfund_master')
                     ->where('id', $data->fundname_id)
                     ->value('fundname');
-
+    
                 $fundDetails[] = [
                     'fund_name' => $fundName,
+                    'total_cost' => number_format($investment, 2),
+                    'cost_per_unit' => number_format($costPerUnit, 2), // Now correct
                     'total_units' => number_format($units, 2),
-                    'total_investment' => number_format($investment, 2),
                     'current_value' => number_format($currentValue, 2),
-                    'profit_or_loss' => $formattedProfitOrLoss,
-                    'absolute_profit_or_loss' => number_format($absoluteProfitOrLoss, 2),
-                    'percentage_gain' => $formattedPercentageGain,
+                    'total_return' => number_format($percentageGain, 2) . '%',
                     'current_nav' => number_format($lastNav, 2),
                     'nav_date' => $lastNavDate
                 ];
             }
-
+    
             return DataTables::of($fundDetails)->make(true);
         }
-
+    
         $portfolios = DB::table('portfolios')->where('user_id', auth()->id())->get();
         return view('fund-details', compact('portfolios'));
     }
+    
+    
+    
     // for chart 
     public function getInvestmentData()
     {

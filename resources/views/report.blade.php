@@ -209,7 +209,9 @@ $(document).ready(function() {
                 }
             });
         }
+        
     });
+    
 
     updateTableTitle(); // Set initial title on page load
 });

@@ -21,30 +21,27 @@
                             <option value="{{ $portfolio->id }}">{{ $portfolio->name }}</option>
                             @endforeach
                         </select>
-
                     </div>
                 </div>
-
 
                 <table class="table table-bordered text-center mt-3" id="fundDetailsTable">
                     <thead class="thead-light">
                         <tr>
                             <th>Fund Name</th>
+                            <th>Last Price (NAV)</th>
                             <th>
                                 <div class="d-flex flex-column">
-                                    <span>Latest NAV</span>
-                                    <span class="text-muted" style="font-size: 0.7em;">NAV Date</span>
+                                    <span>Total Cost</span>
+                                    <span class="text-muted" style="font-size: 0.7em;">COST PER UNIT</span>
                                 </div>
                             </th>
                             <th>
                                 <div class="d-flex flex-column">
-                                    <span>Invested Amount</span>
-                                    <span class="text-muted" style="font-size: 0.7em;">Units Held</span>
+                                    <span>Current Value</span>
+                                    <span class="text-muted" style="font-size: 0.7em;">UNITS HELD</span>
                                 </div>
                             </th>
-                            <th>Market Value</th>
-                            <th>Profit/Loss</th>
-                            <th>Percentage Gain/Loss</th>
+                            <th>Total Return (%)</th>
                         </tr>
                     </thead>
                 </table>
@@ -78,52 +75,34 @@
             },
             columns: [{
                     data: 'fund_name',
-                    name: 'fund_name',
+                    className: 'text-center'
+                },
+                {
+                    data: 'current_nav',
                     className: 'text-center'
                 },
                 {
                     data: null,
-                    name: 'last_nav',
                     className: 'text-center',
-                    render: function(data, type, row) {
-                        return row.current_nav +
-                            '<br><span style="font-size: 0.8em;">' + row.nav_date + '</span>';
+                    render: function(data) {
+                        return `<strong>${data.total_cost}</strong> <br> <small class="text-muted">(${data.cost_per_unit} per unit)</small>`;
                     }
                 },
                 {
                     data: null,
-                    name: 'total_cost_and_units',
                     className: 'text-center',
-                    render: function(data, type, row) {
-                        return row.total_investment +
-                            '<br><span style="font-size: 0.8em;">' + row.total_units + ' units</span>';
+                    render: function(data) {
+                        return `<strong>${data.current_value}</strong> <br> <small class="text-muted">(${data.total_units} Units)</small>`;
                     }
                 },
                 {
-                    data: 'current_value',
-                    name: 'current_value',
-                    className: 'text-center'
-                },
-                {
-                    data: 'absolute_profit_or_loss',
-                    name: 'absolute_profit_or_loss',
+                    data: 'total_return',
                     className: 'text-center',
-                    render: function(data, type, row) {
-                        return row.profit_or_loss < 0 ?
-                            '<span class="text-danger">' + data + '</span>' :
-                            '<span class="text-success">' + data + '</span>';
-                    }
-                },
-                {
-                    data: 'percentage_gain',
-                    name: 'percentage_gain',
-                    className: 'text-center',
-                    orderable: false,
-                    render: function(data, type, row) {
-                        let value = parseFloat(data);
-                        return value > 0 ?
-                            '<span class="text-success">' + value.toFixed(2) + '%</span>' :
-                            '<span class="text-danger">' + value.toFixed(2) + '%</span>';
+                    render: function(data) {
+                        let numericValue = parseFloat(data);
+                        let colorClass = numericValue >= 0 ? "text-success" : "text-danger";
+                        let sign = numericValue > 0 ? "+" : ""; // Add "+" sign for positive numbers
+                        return `<span class="${colorClass}">${sign}${data}</span>`;
                     }
                 }
             ],
@@ -131,7 +110,6 @@
                 [0, "asc"]
             ]
         });
-
 
         $('#portfolioSelect').change(function() {
             table.ajax.reload();
