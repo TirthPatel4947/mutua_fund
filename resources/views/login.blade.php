@@ -67,6 +67,13 @@
             margin: 10px 0;
             font-size: 14px;
         }
+        .error {
+    color: red;
+    font-size: 14px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
     </style>
 </head>
 

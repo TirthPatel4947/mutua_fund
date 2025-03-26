@@ -65,18 +65,16 @@
     @method('PUT')  <!-- Override POST to send PUT request -->
 
     <input type="hidden" name="token" value="{{ request()->route('token') }}"> <!-- Add Token Field -->
-    
-    <input type="email" name="email" placeholder="Enter your email" required>
+
+    <!-- Ensure email is set correctly if it's passed in the URL query parameter -->
+    <input type="hidden" name="email" value="{{ request()->get('email') }}" required>
+
     <input type="password" name="old_password" placeholder="Current Password" required>
     <input type="password" name="password" placeholder="New Password" required>
     <input type="password" name="password_confirmation" placeholder="Confirm Password" required>
 
     <button type="submit">Update Password</button>
 </form>
-
-
-
-
 
     </div>
 </body>
