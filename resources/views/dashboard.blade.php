@@ -79,7 +79,7 @@
                                 </div>
                                 <h5 class="card-title text-muted">Profit/Loss</h5>
                                 <h3 style="color: {{ $profitOrLoss > 0 ? 'darkgreen' : 'red' }};">
-                                    {{ $profitOrLoss > 0 ? '+' : '-' }} ₹{{ number_format($absoluteProfitOrLoss, 2) }}
+                                    {{ $profitOrLoss > 0 ? '+' : '-' }} ₹{{ number_format($absoluteProfitOrLoss, ) }}
                                 </h3>
                             </div>
                         </div>
